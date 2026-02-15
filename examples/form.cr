@@ -54,7 +54,7 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
 
   # Main loop
   screen.run(fps: 30) do
-    if event = screen.poll_event
+    screen.each_event do |event|
       case event
       when CRT::Key
         if event.ctrl? && event.char == "c"

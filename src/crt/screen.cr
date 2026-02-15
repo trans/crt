@@ -44,6 +44,13 @@ module CRT
       end
     end
 
+    # Drain all pending events, yielding each one.
+    def each_event(& : Ansi::Event ->) : Nil
+      while event = poll_event
+        yield event
+      end
+    end
+
     def draw : Nil
       @ansi.clear
       @widgets.each do |widget|

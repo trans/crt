@@ -129,7 +129,7 @@ module CRT
 
     private def max_line_width : Int32
       return 0 if @lines.empty?
-      @lines.max_of { |l| Ansi::DisplayWidth.width(l) }
+      Ansi::DisplayWidth.max_width(@lines)
     end
 
     private def avail_width : Int32

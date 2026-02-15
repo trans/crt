@@ -133,7 +133,7 @@ module CRT
                 end
 
       # Message width
-      msg_w = @message_lines.max_of { |l| Ansi::DisplayWidth.width(l) } + PAD * 2
+      msg_w = Ansi::DisplayWidth.max_width(@message_lines) + PAD * 2
 
       # Buttons width
       btn_w = buttons_row_width + PAD * 2

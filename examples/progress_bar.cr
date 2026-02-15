@@ -20,7 +20,7 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
 
   screen.run(fps: 30) do
     bar.value = (bar.value + 0.005) % 1.0
-    if event = screen.poll_event
+    screen.each_event do |event|
       case event
       when CRT::Key
         screen.quit if event.ctrl? && event.char == "c"

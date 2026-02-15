@@ -24,7 +24,7 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
   CRT::Label.new(screen, x: 2, y: 10, text: "Ctrl+C to quit", style: hint_style)
 
   screen.run(fps: 30) do
-    if event = screen.poll_event
+    screen.each_event do |event|
       case event
       when CRT::Key
         screen.quit if event.ctrl? && event.char == "c"

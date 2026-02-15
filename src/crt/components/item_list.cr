@@ -1,10 +1,14 @@
 module CRT
-  class RadioGroup < Widget
+  class ItemList < Widget
+    UNFOCUSED_DEFAULT = Ansi::Style.new(dim: true, inverse: true)
+
     @items : Array(String)
     @selected : Int32
-    @selected_mark : String
-    @unselected_mark : String
     @focus_style : Ansi::Style
+    @unfocus_style : Ansi::Style
+    @left_mark : String
+    @right_mark : String
+    @pad : Int32
     @on_change : (Int32 -> Nil)?
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -13,8 +17,10 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @selected_mark : String = "⬤",
-                   @unselected_mark : String = "◯",
+                   @unfocus_style : Ansi::Style = UNFOCUSED_DEFAULT,
+                   @left_mark : String = "◄",
+                   @right_mark : String = "►",
+                   @pad : Int32 = 1,
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    &on_change : Int32 ->)
@@ -31,8 +37,10 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @selected_mark : String = "⬤",
-                   @unselected_mark : String = "◯",
+                   @unfocus_style : Ansi::Style = UNFOCUSED_DEFAULT,
+                   @left_mark : String = "◄",
+                   @right_mark : String = "►",
+                   @pad : Int32 = 1,
                    border : Ansi::Border? = nil,
                    shadow : Bool = false)
       @on_change = nil
@@ -56,7 +64,7 @@ module CRT
     property on_change : (Int32 -> Nil)?
 
     def select(index : Int32) : Nil
-      index = index.clamp(0, @items.size - 1)
+      index = index % @items.size
       return if index == @selected
       @selected = index
       @on_change.try(&.call(@selected))
@@ -70,24 +78,40 @@ module CRT
       p = p.shadow if shadow
       p.fill(style).draw
 
-      mark_w = {Ansi::DisplayWidth.width(@selected_mark),
-                Ansi::DisplayWidth.width(@unselected_mark)}.max
-      @items.each_with_index do |item, i|
-        mark = i == @selected ? @selected_mark : @unselected_mark
-        canvas.write(content_x, content_y + i, mark, style)
-        s = (i == @selected && focused?) ? style.merge(@focus_style) : style
-        canvas.write(content_x + mark_w + 1, content_y + i, item, s)
-      end
+      lm_w = Ansi::DisplayWidth.width(@left_mark)
+      rm_w = Ansi::DisplayWidth.width(@right_mark)
+      item_area_w = content_width - lm_w - rm_w - @pad * 2
+
+      cy = content_y
+      # Left mark
+      canvas.write(content_x, cy, @left_mark, style)
+      # Item text — pad + centered item + pad, all in active style
+      item = @items[@selected]
+      item_w = Ansi::DisplayWidth.width(item)
+      pad_total = item_area_w - item_w
+      pad_left = {pad_total // 2, 0}.max
+      pad_right = {pad_total - pad_left, 0}.max
+      padded = " " * @pad + " " * pad_left + item + " " * pad_right + " " * @pad
+      active = focused? ? style.merge(@focus_style) : style.merge(@unfocus_style)
+      canvas.write(content_x + lm_w, cy, padded, active)
+      # Right mark
+      canvas.write(content_x + content_width - rm_w, cy, @right_mark, style)
     end
 
     def handle_event(event : Ansi::Event) : Bool
       case event
       when Ansi::Key
-        if event.code.up?
-          select_prev
+        if event.code.right?
+          self.select((@selected + 1) % @items.size)
           return true
-        elsif event.code.down?
-          select_next
+        elsif event.code.left?
+          self.select((@selected - 1) % @items.size)
+          return true
+        elsif event.code.home?
+          self.select(0)
+          return true
+        elsif event.code.end?
+          self.select(@items.size - 1)
           return true
         elsif event.code.enter? || (event.code.char? && event.char == " ")
           @on_change.try(&.call(@selected))
@@ -95,9 +119,13 @@ module CRT
         end
       when Ansi::Mouse
         if event.button.left? && event.action.press? && hit?(event.x, event.y)
-          click_index = event.y - content_y
-          if click_index >= 0 && click_index < @items.size
-            self.select(click_index)
+          lm_w = Ansi::DisplayWidth.width(@left_mark)
+          rm_w = Ansi::DisplayWidth.width(@right_mark)
+          rel_x = event.x - content_x
+          if rel_x < lm_w + @pad
+            self.select((@selected - 1) % @items.size)
+          elsif rel_x >= content_width - rm_w - @pad
+            self.select((@selected + 1) % @items.size)
           end
           return true
         end
@@ -105,21 +133,13 @@ module CRT
       false
     end
 
-    private def select_next : Nil
-      self.select(@selected + 1) if @selected < @items.size - 1
-    end
-
-    private def select_prev : Nil
-      self.select(@selected - 1) if @selected > 0
-    end
-
     private def compute_size(border : Ansi::Border?) : {Int32, Int32}
-      mark_w = {Ansi::DisplayWidth.width(@selected_mark),
-                Ansi::DisplayWidth.width(@unselected_mark)}.max
+      lm_w = Ansi::DisplayWidth.width(@left_mark)
+      rm_w = Ansi::DisplayWidth.width(@right_mark)
       max_item_w = Ansi::DisplayWidth.max_width(@items)
       inset = border ? 2 : 0
-      w = mark_w + 1 + max_item_w + inset
-      h = @items.size + inset
+      w = lm_w + @pad + max_item_w + @pad + rm_w + inset
+      h = 1 + inset
       {w, h}
     end
   end

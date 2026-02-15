@@ -133,7 +133,7 @@ module CRT
     end
 
     private def compute_size(border : Ansi::Border?) : {Int32, Int32}
-      max_item_w = @items.max_of { |i| Ansi::DisplayWidth.width(i) }
+      max_item_w = Ansi::DisplayWidth.max_width(@items)
       inset = border ? 2 : 0
       w = @marker_w + 1 + max_item_w + inset
       h = @items.size + inset

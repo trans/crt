@@ -51,7 +51,7 @@ module CRT
       lines = str.split('\n')
       inset = border ? 2 : 0
       padding = pad * 2
-      content_w = lines.max_of { |l| Ansi::DisplayWidth.width(l) }
+      content_w = Ansi::DisplayWidth.max_width(lines)
       content_h = lines.size
       {content_w + inset + padding, content_h + inset}
     end
