@@ -68,6 +68,11 @@ module CRT
       p
     end
 
+    # Returns true if the point (mx, my) is within the widget bounds.
+    def hit?(mx : Int32, my : Int32) : Bool
+      mx >= x && mx < x + width && my >= y && my < y + height
+    end
+
     # Content area inset by border.
     def content_x : Int32
       x + (border ? 1 : 0)

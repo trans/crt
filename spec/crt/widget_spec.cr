@@ -100,6 +100,25 @@ describe CRT::Widget do
     end
   end
 
+  describe "#hit?" do
+    it "returns true when point is inside widget bounds" do
+      screen = test_screen
+      widget = TestWidget.new(screen, x: 5, y: 3, width: 10, height: 5)
+      widget.hit?(5, 3).should be_true
+      widget.hit?(10, 5).should be_true
+      widget.hit?(14, 7).should be_true
+    end
+
+    it "returns false when point is outside widget bounds" do
+      screen = test_screen
+      widget = TestWidget.new(screen, x: 5, y: 3, width: 10, height: 5)
+      widget.hit?(4, 3).should be_false    # left of
+      widget.hit?(15, 3).should be_false   # right of (x + width)
+      widget.hit?(5, 2).should be_false    # above
+      widget.hit?(5, 8).should be_false    # below (y + height)
+    end
+  end
+
   describe "#handle_event" do
     it "returns false by default" do
       screen = test_screen

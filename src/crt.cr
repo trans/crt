@@ -14,3 +14,4 @@ end
 require "./crt/widget"
 require "./crt/screen"
 require "./crt/components/label"
+require "./crt/components/button"
