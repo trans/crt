@@ -17,24 +17,33 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
   newsletter = CRT::Checkbox.new(screen, x: 10, y: 9, text: "Subscribe to newsletter")
   dark_mode = CRT::Checkbox.new(screen, x: 10, y: 10, text: "Enable dark mode", checked: true)
 
+  # Progress bar
+  CRT::Label.new(screen, x: 2, y: 12, text: "Progress:")
+  fill_style = CRT::Style.new(fg: CRT::Color.rgb(80, 220, 120))
+  empty_style = CRT::Style.new(fg: CRT::Color.rgb(60, 60, 60))
+  progress = CRT::ProgressBar.new(screen, x: 13, y: 12, width: 27,
+    fill_style: fill_style, empty_style: empty_style)
+
   # Status label
   status_style = CRT::Style.new(fg: CRT::Color.rgb(100, 255, 100))
-  status = CRT::Label.new(screen, x: 2, y: 16, width: 50, height: 1,
+  status = CRT::Label.new(screen, x: 2, y: 18, width: 50, height: 1,
     text: "", style: status_style)
 
   # Submit button
-  submit = CRT::Button.new(screen, x: 10, y: 12, text: "Submit") do
+  submit = CRT::Button.new(screen, x: 10, y: 14, text: "Submit") do
+    progress.value = (progress.value + 0.1).clamp(0.0, 1.0)
+    pct = (progress.value * 100).to_i
     parts = [] of String
     parts << name_entry.text unless name_entry.text.empty?
     parts << email_entry.text unless email_entry.text.empty?
     parts << "newsletter" if newsletter.checked?
     parts << "dark mode" if dark_mode.checked?
-    status.text = "Submitted: #{parts.join(", ")}"
+    status.text = "Submitted (#{pct}%): #{parts.join(", ")}"
   end
 
   # Quit hint
   hint_style = CRT::Style.new(dim: true)
-  CRT::Label.new(screen, x: 2, y: 18, text: "Tab/Shift+Tab to navigate | Ctrl+C to quit",
+  CRT::Label.new(screen, x: 2, y: 20, text: "Tab/Shift+Tab to navigate | Ctrl+C to quit",
     style: hint_style)
 
   # Focus the first entry
