@@ -8,18 +8,24 @@ describe CRT::Button do
       button.focusable?.should be_true
     end
 
-    it "auto-sizes with border: OK → 8x3" do
+    it "auto-sizes without border: OK → 6x1" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
+      button.width.should eq(6)   # 2 text + 2 pad
+      button.height.should eq(1)
+    end
+
+    it "auto-sizes with border: OK → 8x3" do
+      screen = test_screen
+      button = CRT::Button.new(screen, x: 0, y: 0, text: "OK", border: CRT::Border::Single)
       button.width.should eq(8)   # 2 text + 2 pad + 2 border
       button.height.should eq(3)  # 1 + 2 border
     end
 
-    it "auto-sizes without border: OK → 6x1" do
+    it "no border by default" do
       screen = test_screen
-      button = CRT::Button.new(screen, x: 0, y: 0, text: "OK", border: nil)
-      button.width.should eq(6)   # 2 text + 2 pad
-      button.height.should eq(1)
+      button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
+      button.border.should be_nil
     end
 
     it "uses explicit width and height" do
@@ -31,23 +37,16 @@ describe CRT::Button do
   end
 
   describe "#draw" do
-    it "renders centered text inside border" do
+    it "renders centered text" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
       screen.draw
 
       render = screen.ansi.render
-      # Border top-left corner
-      render.cell(0, 0).grapheme.should eq("\u250C")
-      # Centered text at row 1 (inside border)
-      # Width 8: border(1) + pad(1) + "OK"(2) + pad(1) + border(1)
-      # Text starts at x=2, centered in 6-wide content area (pad 1 each side, 4 inner, "OK" at offset 1 → x=3)
-      # Actually with panel centering: content area is 6 wide, pad=1 means text area is 4 wide,
-      # "OK" centered in 4 → offset 1, so x = border(1) + pad_offset + 1 = 2 or 3
-      # Let's just verify the O and K appear somewhere in row 1
-      row1 = (0...8).map { |cx| render.cell(cx, 1).grapheme }
-      row1.should contain("O")
-      row1.should contain("K")
+      # No border, width 6, height 1: pad(2) + "OK"(2) + pad(2)
+      row0 = (0...6).map { |cx| render.cell(cx, 0).grapheme }
+      row0.should contain("O")
+      row0.should contain("K")
     end
 
     it "applies inverse style when focused" do
@@ -57,17 +56,17 @@ describe CRT::Button do
       screen.draw
 
       render = screen.ansi.render
-      # Check a cell inside the button for inverse style
-      render.cell(1, 1).style.inverse.should be_true
+      render.cell(2, 0).style.inverse.should be_true
     end
 
-    it "uses normal style when unfocused" do
+    it "uses dim inverse style when unfocused" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
       screen.draw
 
       render = screen.ansi.render
-      render.cell(1, 1).style.inverse.should be_false
+      render.cell(2, 0).style.inverse.should be_true
+      render.cell(2, 0).style.dim.should be_true
     end
   end
 
@@ -104,7 +103,7 @@ describe CRT::Button do
       called = false
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK") { called = true }
       click = CRT::Ansi::Mouse.new(CRT::Ansi::Mouse::Button::Left,
-        CRT::Ansi::Mouse::Action::Press, 3, 1)
+        CRT::Ansi::Mouse::Action::Press, 2, 0)
       result = button.handle_event(click)
       result.should be_true
       called.should be_true

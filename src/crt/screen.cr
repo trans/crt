@@ -3,11 +3,13 @@ module CRT
     getter ansi : Ansi::Screen
     getter widgets : Array(Widget)
     @focused : Widget?
+    property modal : Widget?
 
     def initialize(io : IO = STDOUT, **opts)
       @ansi = Ansi::Screen.new(io, **opts)
       @widgets = [] of Widget
       @focused = nil
+      @modal = nil
     end
 
     def self.open(io : IO = STDOUT, **opts, &) : Nil
@@ -56,6 +58,7 @@ module CRT
     end
 
     def unregister(widget : Widget) : Nil
+      @modal = nil if @modal == widget
       @widgets.delete(widget)
       if @focused == widget
         widget.unfocus
@@ -100,6 +103,10 @@ module CRT
     # Input dispatch
 
     def dispatch(event : Ansi::Event) : Bool
+      if m = @modal
+        return m.handle_event(event)
+      end
+
       case event
       when Ansi::Key
         if event.code.tab?

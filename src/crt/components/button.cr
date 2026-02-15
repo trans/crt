@@ -1,7 +1,10 @@
 module CRT
   class Button < Widget
+    UNFOCUSED_DEFAULT = Ansi::Style.new(dim: true, inverse: true)
+
     @text : String
     @focus_style : Ansi::Style
+    @unfocus_style : Ansi::Style
     @pad : Int32
     @action : (-> Nil)?
 
@@ -10,7 +13,8 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   border : Ansi::Border? = Ansi::Border::Single,
+                   @unfocus_style : Ansi::Style = UNFOCUSED_DEFAULT,
+                   border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    @pad : Int32 = 2,
                    &action : -> Nil)
@@ -25,7 +29,8 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   border : Ansi::Border? = Ansi::Border::Single,
+                   @unfocus_style : Ansi::Style = UNFOCUSED_DEFAULT,
+                   border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    @pad : Int32 = 2)
       @action = nil
@@ -44,7 +49,7 @@ module CRT
     property action : (-> Nil)?
 
     def draw(canvas : Ansi::Canvas) : Nil
-      active = focused? ? style.merge(@focus_style) : style
+      active = focused? ? style.merge(@focus_style) : style.merge(@unfocus_style)
       p = canvas.panel(x, y, w: width, h: height)
       if b = border
         p = p.border(b, active)
