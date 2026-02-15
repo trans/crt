@@ -1,7 +1,7 @@
 require "../src/crt"
 
 CODE = <<-CRYSTAL
-  CRT::ScrollBar.new(screen, x: 2, y: 5,
+  CRT::Slider.new(screen, x: 2, y: 5,
     length: 10, thumb_size: 0.3)
   CRYSTAL
 
@@ -12,10 +12,10 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
     border: CRT::Border::Rounded, pad: 1)
 
   # Vertical scrollbar
-  vsb = CRT::ScrollBar.new(screen, x: 2, y: 5, length: 10, thumb_size: 0.3)
+  vsb = CRT::Slider.new(screen, x: 2, y: 5, length: 10, thumb_size: 0.3)
 
   # Horizontal scrollbar
-  hsb = CRT::ScrollBar.new(screen, x: 5, y: 5,
+  hsb = CRT::Slider.new(screen, x: 5, y: 5,
     orientation: CRT::Orientation::Horizontal, length: 20, thumb_size: 0.3)
 
   # Value label

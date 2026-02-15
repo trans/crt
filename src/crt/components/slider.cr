@@ -4,7 +4,7 @@ module CRT
     Horizontal
   end
 
-  class ScrollBar < Widget
+  class Slider < Widget
     @orientation : Orientation
     @value : Float64
     @thumb_size : Float64

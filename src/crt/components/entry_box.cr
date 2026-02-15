@@ -17,8 +17,8 @@ module CRT
                    text : String = "",
                    @cursor_style : Ansi::Style = Ansi::Style::INVERSE,
                    @scrollbar : Bool = false,
-                   @thumb_style : Ansi::Style = ScrollBar::THUMB_DEFAULT,
-                   @track_style : Ansi::Style = ScrollBar::TRACK_DEFAULT,
+                   @thumb_style : Ansi::Style = Slider::THUMB_DEFAULT,
+                   @track_style : Ansi::Style = Slider::TRACK_DEFAULT,
                    style : Ansi::Style = Ansi::Style.default,
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
@@ -38,8 +38,8 @@ module CRT
                    text : String = "",
                    @cursor_style : Ansi::Style = Ansi::Style::INVERSE,
                    @scrollbar : Bool = false,
-                   @thumb_style : Ansi::Style = ScrollBar::THUMB_DEFAULT,
-                   @track_style : Ansi::Style = ScrollBar::TRACK_DEFAULT,
+                   @thumb_style : Ansi::Style = Slider::THUMB_DEFAULT,
+                   @track_style : Ansi::Style = Slider::TRACK_DEFAULT,
                    style : Ansi::Style = Ansi::Style.default,
                    border : Ansi::Border? = nil,
                    shadow : Bool = false)
@@ -264,7 +264,7 @@ module CRT
       max_pos = {half_cells - thumb_h, 0}.max
       thumb_pos = max_scroll > 0 ? (@scroll_y * max_pos) // max_scroll : 0
 
-      thumb_bg = focused? ? @thumb_style.bg : ScrollBar::THUMB_DIM.bg
+      thumb_bg = focused? ? @thumb_style.bg : Slider::THUMB_DIM.bg
       track_bg = @track_style.bg
       full_thumb_s = Ansi::Style.new(bg: thumb_bg)
       full_track_s = Ansi::Style.new(bg: track_bg)
