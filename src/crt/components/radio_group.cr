@@ -13,8 +13,8 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @selected_mark : String = "(●)",
-                   @unselected_mark : String = "( )",
+                   @selected_mark : String = "⬤",
+                   @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    &on_change : Int32 ->)
@@ -31,8 +31,8 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @selected_mark : String = "(●)",
-                   @unselected_mark : String = "( )",
+                   @selected_mark : String = "⬤",
+                   @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false)
       @on_change = nil
@@ -70,11 +70,13 @@ module CRT
       p = p.shadow if shadow
       p.fill(style).draw
 
+      mark_w = {Ansi::DisplayWidth.width(@selected_mark),
+                Ansi::DisplayWidth.width(@unselected_mark)}.max
       @items.each_with_index do |item, i|
         mark = i == @selected ? @selected_mark : @unselected_mark
-        display = "#{mark} #{item}"
+        canvas.write(content_x, content_y + i, mark, style)
         s = (i == @selected && focused?) ? style.merge(@focus_style) : style
-        canvas.write(content_x, content_y + i, display, s)
+        canvas.write(content_x + mark_w + 1, content_y + i, item, s)
       end
     end
 

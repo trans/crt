@@ -16,10 +16,10 @@ describe CRT::RadioGroup do
 
     it "auto-sizes from items" do
       screen = test_screen
-      # "(●) Long Option" = 3 + 1 + 11 = 15 wide, 3 items tall
+      # "⬤ Long Option" = 1 + 1 + 11 = 13 wide, 3 items tall
       rg = CRT::RadioGroup.new(screen, x: 0, y: 0,
         items: ["Short", "Long Option", "Mid"])
-      rg.width.should eq(15)
+      rg.width.should eq(13)
       rg.height.should eq(3)
     end
 
@@ -27,8 +27,8 @@ describe CRT::RadioGroup do
       screen = test_screen
       rg = CRT::RadioGroup.new(screen, x: 0, y: 0,
         items: ["A", "B"], border: CRT::Ansi::Border::Single)
-      # "(●) A" = 3 + 1 + 1 = 5 + border 2 = 7
-      rg.width.should eq(7)
+      # "⬤ A" = 1 + 1 + 1 = 3 + border 2 = 5
+      rg.width.should eq(5)
       rg.height.should eq(4) # 2 items + 2 border
     end
 
@@ -119,27 +119,24 @@ describe CRT::RadioGroup do
       screen.draw
 
       render = screen.ansi.render
-      # Row 0: "(●) A" — selected
-      render.cell(0, 0).grapheme.should eq("(")
-      render.cell(1, 0).grapheme.should eq("●")
-      render.cell(2, 0).grapheme.should eq(")")
-      render.cell(4, 0).grapheme.should eq("A")
-      # Row 1: "( ) B" — unselected
-      render.cell(0, 1).grapheme.should eq("(")
-      render.cell(1, 1).grapheme.should eq(" ")
-      render.cell(2, 1).grapheme.should eq(")")
-      render.cell(4, 1).grapheme.should eq("B")
+      # Row 0: "⬤ A" — selected
+      render.cell(0, 0).grapheme.should eq("⬤")
+      render.cell(2, 0).grapheme.should eq("A")
+      # Row 1: "◯ B" — unselected
+      render.cell(0, 1).grapheme.should eq("◯")
+      render.cell(2, 1).grapheme.should eq("B")
     end
 
-    it "applies focus style to selected row when focused" do
+    it "applies focus style to selected item text when focused" do
       screen = test_screen
       rg = CRT::RadioGroup.new(screen, x: 0, y: 0, items: ["A", "B"])
       screen.focus(rg)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).style.inverse.should be_true  # selected row
-      render.cell(0, 1).style.inverse.should be_false  # unselected row
+      render.cell(0, 0).style.inverse.should be_false  # mark stays normal
+      render.cell(2, 0).style.inverse.should be_true   # item text is inverse
+      render.cell(2, 1).style.inverse.should be_false   # unselected row
     end
 
     it "no focus style when unfocused" do
@@ -148,7 +145,7 @@ describe CRT::RadioGroup do
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).style.inverse.should be_false
+      render.cell(2, 0).style.inverse.should be_false
     end
   end
 
