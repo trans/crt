@@ -1,7 +1,7 @@
 require "../src/crt"
 
 CODE = <<-CRYSTAL
-  CRT::Checkbox.new(screen, x: 2, y: 5,
+  CRT::Checkbox.new(screen, x: 2, y: 7,
     text: "Enable notifications",
     checked: true)
   CRYSTAL
@@ -13,12 +13,12 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
     border: CRT::Border::Rounded, pad: 1)
 
   # Widget
-  cb = CRT::Checkbox.new(screen, x: 2, y: 5, text: "Enable notifications", checked: true)
+  cb = CRT::Checkbox.new(screen, x: 2, y: 7, text: "Enable notifications", checked: true)
   screen.focus(cb)
 
   # Quit hint
   hint_style = CRT::Style.new(dim: true)
-  CRT::Label.new(screen, x: 2, y: 8, text: "Space/Enter to toggle | Ctrl+C to quit",
+  CRT::Label.new(screen, x: 2, y: 9, text: "Space/Enter to toggle | Ctrl+C to quit",
     style: hint_style)
 
   screen.run(fps: 30) do
