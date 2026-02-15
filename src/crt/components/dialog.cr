@@ -78,19 +78,17 @@ module CRT
         canvas.write(content_x + PAD, content_y + 1 + i, line, style)
       end
 
-      # Buttons centered on bottom row
+      # Buttons centered on bottom row — styled like Button widget
       button_y = content_y + content_height - 2
       total_w = buttons_row_width
       start_x = content_x + (content_width - total_w) // 2
 
       bx = start_x
       @buttons.each_with_index do |label, i|
-        btn_str = " #{label} "
-        btn_w = Ansi::DisplayWidth.width(btn_str) + 2 # + brackets
-        btn_style = i == @selected ? style.merge(@focus_style) : style
-        canvas.write(bx, button_y, "[", style)
-        canvas.write(bx + 1, button_y, btn_str, btn_style)
-        canvas.write(bx + 1 + Ansi::DisplayWidth.width(btn_str), button_y, "]", style)
+        btn_text = " " * BUTTON_PAD + label + " " * BUTTON_PAD
+        btn_w = Ansi::DisplayWidth.width(btn_text)
+        btn_style = i == @selected ? style.merge(@focus_style) : style.merge(Button::UNFOCUSED_DEFAULT)
+        canvas.write(bx, button_y, btn_text, btn_style)
         bx += btn_w + BUTTON_GAP
       end
     end
@@ -151,7 +149,7 @@ module CRT
     end
 
     private def buttons_row_width : Int32
-      @buttons.sum { |b| Ansi::DisplayWidth.width(b) + BUTTON_PAD * 2 + 2 } +
+      @buttons.sum { |b| Ansi::DisplayWidth.width(b) + BUTTON_PAD * 2 } +
         BUTTON_GAP * ({@buttons.size - 1, 0}.max)
     end
 
@@ -164,7 +162,7 @@ module CRT
 
       bx = start_x
       @buttons.each_with_index do |label, i|
-        btn_w = Ansi::DisplayWidth.width(label) + BUTTON_PAD * 2 + 2
+        btn_w = Ansi::DisplayWidth.width(label) + BUTTON_PAD * 2
         if mx >= bx && mx < bx + btn_w
           return i
         end
