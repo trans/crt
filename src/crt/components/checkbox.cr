@@ -14,8 +14,8 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @checked_mark : String = "[x]",
-                   @unchecked_mark : String = "[ ]",
+                   @checked_mark : String = "⬛",
+                   @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    @pad : Int32 = 0,
@@ -32,8 +32,8 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
                    @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @checked_mark : String = "[x]",
-                   @unchecked_mark : String = "[ ]",
+                   @checked_mark : String = "⬛",
+                   @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    @pad : Int32 = 0)
@@ -76,16 +76,18 @@ module CRT
 
     def draw(canvas : Ansi::Canvas) : Nil
       active = focused? ? style.merge(@focus_style) : style
-      mark = checked? ? @checked_mark : @unchecked_mark
-      display = "#{mark} #{@text}"
       p = canvas.panel(x, y, w: width, h: height)
       if b = border
-        p = p.border(b, active)
+        p = p.border(b, style)
       end
       p = p.shadow if shadow
-      p.fill(active)
-       .text(display, style: active, align: Ansi::Align::Left, valign: Ansi::VAlign::Middle, pad: @pad)
-       .draw
+      p.fill(style).draw
+
+      mark = checked? ? @checked_mark : @unchecked_mark
+      mark_w = {Ansi::DisplayWidth.width(@checked_mark),
+                Ansi::DisplayWidth.width(@unchecked_mark)}.max
+      canvas.write(content_x + @pad, content_y, mark, style)
+      canvas.write(content_x + @pad + mark_w + 1, content_y, @text, active)
     end
 
     def handle_event(event : Ansi::Event) : Bool
@@ -105,9 +107,10 @@ module CRT
     end
 
     private def compute_size(border : Ansi::Border?) : {Int32, Int32}
-      display = "#{@checked_mark} #{@text}"
+      mark_w = {Ansi::DisplayWidth.width(@checked_mark),
+                Ansi::DisplayWidth.width(@unchecked_mark)}.max
       inset = border ? 2 : 0
-      w = Ansi::DisplayWidth.width(display) + @pad * 2 + inset
+      w = mark_w + 1 + Ansi::DisplayWidth.width(@text) + @pad * 2 + inset
       h = 1 + inset
       {w, h}
     end

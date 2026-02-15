@@ -14,11 +14,11 @@ describe CRT::Checkbox do
       cb.checked?.should be_false
     end
 
-    it "auto-sizes from text: width 10, height 1" do
+    it "auto-sizes from text" do
       screen = test_screen
       cb = CRT::Checkbox.new(screen, x: 0, y: 0, text: "Option")
-      # "[x] Option" = 3 + 1 + 6 = 10
-      cb.width.should eq(10)
+      # "⬜ Option" = 2 + 1 + 6 = 9
+      cb.width.should eq(9)
       cb.height.should eq(1)
     end
 
@@ -26,7 +26,7 @@ describe CRT::Checkbox do
       screen = test_screen
       cb = CRT::Checkbox.new(screen, x: 0, y: 0, text: "Option",
         border: CRT::Ansi::Border::Single)
-      cb.width.should eq(12)  # 10 + 2
+      cb.width.should eq(11)  # 9 + 2
       cb.height.should eq(3)  # 1 + 2
     end
 
@@ -106,11 +106,8 @@ describe CRT::Checkbox do
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).grapheme.should eq("[")
-      render.cell(1, 0).grapheme.should eq(" ")
-      render.cell(2, 0).grapheme.should eq("]")
-      render.cell(3, 0).grapheme.should eq(" ")
-      render.cell(4, 0).grapheme.should eq("O")
+      render.cell(0, 0).grapheme.should eq("⬜")
+      render.cell(3, 0).grapheme.should eq("O")
     end
 
     it "renders checked state" do
@@ -119,20 +116,18 @@ describe CRT::Checkbox do
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).grapheme.should eq("[")
-      render.cell(1, 0).grapheme.should eq("x")
-      render.cell(2, 0).grapheme.should eq("]")
+      render.cell(0, 0).grapheme.should eq("⬛")
     end
 
-    it "applies inverse style when focused" do
+    it "applies inverse style to text when focused" do
       screen = test_screen
       cb = CRT::Checkbox.new(screen, x: 0, y: 0, text: "Option")
       screen.focus(cb)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).style.inverse.should be_true
-      render.cell(4, 0).style.inverse.should be_true
+      render.cell(0, 0).style.inverse.should be_false  # mark stays normal
+      render.cell(3, 0).style.inverse.should be_true    # text is inverse
     end
 
     it "uses normal style when unfocused" do
@@ -141,7 +136,7 @@ describe CRT::Checkbox do
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).style.inverse.should be_false
+      render.cell(3, 0).style.inverse.should be_false
     end
   end
 
