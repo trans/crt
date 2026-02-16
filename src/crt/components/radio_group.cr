@@ -1,9 +1,5 @@
 module CRT
   class RadioGroup < Widget
-    def self.default_theme : Theme
-      CRT.theme.copy_with(unfocused: Ansi::Style.default)
-    end
-
     @items : Array(String)
     @selected : Int32
     @selected_mark : String
@@ -19,14 +15,12 @@ module CRT
                    @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
-                   theme : Theme = RadioGroup.default_theme,
                    &on_change : Int32 ->)
       @on_change = on_change
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -37,14 +31,12 @@ module CRT
                    @selected_mark : String = "⬤",
                    @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
-                   decor : Decor = Decor::None,
-                   theme : Theme = RadioGroup.default_theme)
+                   decor : Decor = Decor::None)
       @on_change = nil
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     getter items : Array(String)
@@ -85,7 +77,13 @@ module CRT
         is_selected = i == @selected
         mark = is_selected ? @selected_mark : @unselected_mark
         canvas.write(content_x, content_y + i, mark, style)
-        s = theme.resolve(style, focused: is_selected && focused?, active: is_selected)
+        s = if is_selected && focused?
+              theme.field_focus
+            elsif is_selected
+              theme.field
+            else
+              style
+            end
         canvas.write(content_x + mark_w + 1, content_y + i, item, s)
       end
     end

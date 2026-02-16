@@ -2,14 +2,6 @@ module CRT
   class Tabs < Widget
     record Page, label : String, frame : Frame
 
-    def self.default_theme : Theme
-      CRT.theme.copy_with(
-        focused: Ansi::Style.new(bg: Ansi::Color.rgb(255, 255, 255)),
-        unfocused: Ansi::Style.default,
-        active: CRT.theme.field_style,
-        passive: Ansi::Style.default)
-    end
-
     @pages : Array(Page)
     @active : Int32
     @in_page : Bool
@@ -23,14 +15,13 @@ module CRT
                    decor : Decor = Decor::None,
                    box : Ansi::Boxing? = nil,
                    @separator : Bool = false,
-                   @tab_type : TabType = TabType::Folder,
-                   theme : Theme = Tabs.default_theme)
+                   @tab_type : TabType = TabType::Folder)
       @pages = [] of Page
       @active = 0
       @in_page = false
       super(screen, x: x, y: y, width: width, height: height,
             style: style, border: border, decor: decor,
-            focusable: true, box: box, theme: theme)
+            focusable: true, box: box)
     end
 
     def pages : Array(Page)
@@ -80,7 +71,7 @@ module CRT
       draw_separator(canvas)
       # Extend bevel to top-right for underline style
       if @tab_type.underline? && decor.bevel?
-        canvas.put(x + width, y, "▎", Ansi::Style.new(fg: Ansi::Color.rgb(70, 70, 85)))
+        canvas.put(x + width, y, "▎", Ansi::Style.new(fg: theme.bevel))
       end
 
       if page = active_page
@@ -157,11 +148,17 @@ module CRT
       cx = content_x
       @pages.each_with_index do |page, i|
         if i > 0
-          canvas.put(cx, content_y, "│", Ansi::Style.new(fg: Ansi::Color.rgb(70, 70, 85), bg: style.bg))
+          canvas.put(cx, content_y, "│", Ansi::Style.new(fg: theme.bevel, bg: style.bg))
           cx += 1
         end
         is_active = i == @active
-        s = theme.resolve(style, focused: focused? && !@in_page && is_active, active: is_active)
+        s = if is_active && focused? && !@in_page
+              theme.field_focus
+            elsif is_active
+              theme.field
+            else
+              style
+            end
         text = " #{page.label} "
         canvas.write(cx, content_y, text, s)
         cx += Ansi::DisplayWidth.width(text)
@@ -196,11 +193,11 @@ module CRT
       # Draw underline
       line_y = content_y + 1
       active_range = @active < label_ranges.size ? label_ranges[@active] : nil
-      dim_line = Ansi::Style.new(fg: Ansi::Color.rgb(100, 100, 120), bg: style.bg)
+      dim_line = Ansi::Style.new(fg: theme.dim, bg: style.bg)
       bright_line = if focused? && !@in_page
-                      Ansi::Style.new(fg: Ansi::Color.rgb(255, 255, 255), bg: style.bg)
+                      Ansi::Style.new(fg: theme.bright, bg: style.bg)
                     else
-                      Ansi::Style.new(fg: theme.base.fg, bg: style.bg)
+                      Ansi::Style.new(fg: theme.fg, bg: style.bg)
                     end
       content_width.times do |i|
         lx = content_x + i

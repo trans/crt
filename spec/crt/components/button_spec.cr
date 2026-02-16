@@ -49,23 +49,23 @@ describe CRT::Button do
       row0.should contain("K")
     end
 
-    it "applies white background when focused" do
+    it "applies bright background when focused" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
       screen.focus(button)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(2, 0).style.bg.should eq(CRT::Color.rgb(255, 255, 255))
+      render.cell(2, 0).style.bg.should eq(CRT.theme.bright)
     end
 
-    it "uses field_style colors when unfocused" do
+    it "uses field colors when unfocused" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
       screen.draw
 
       render = screen.ansi.render
-      render.cell(2, 0).style.bg.should eq(CRT.theme.base.fg)
+      render.cell(2, 0).style.bg.should eq(CRT.theme.fg)
     end
   end
 

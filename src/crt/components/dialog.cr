@@ -20,7 +20,6 @@ module CRT
                    style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border = Ansi::Border::Rounded,
                    decor : Decor = Decor::Shadow,
-                   theme : Theme = CRT.theme,
                    &on_choice : Int32 ->)
       @on_choice = on_choice
       @selected = 0
@@ -29,8 +28,7 @@ module CRT
       cx = screen.center_x(w + (decor.none? ? 0 : 1))
       cy = screen.center_y(h + (decor.none? ? 0 : 1))
       super(screen, x: cx, y: cy, width: w, height: h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
       @screen.raise(self)
       @screen.focus(self)
       @screen.modal = self
@@ -42,8 +40,7 @@ module CRT
                    @buttons : Array(String) = ["OK"],
                    style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border = Ansi::Border::Rounded,
-                   decor : Decor = Decor::Shadow,
-                   theme : Theme = CRT.theme)
+                   decor : Decor = Decor::Shadow)
       @on_choice = nil
       @selected = 0
       @message_lines = message.split('\n')
@@ -51,8 +48,7 @@ module CRT
       cx = screen.center_x(w + (decor.none? ? 0 : 1))
       cy = screen.center_y(h + (decor.none? ? 0 : 1))
       super(screen, x: cx, y: cy, width: w, height: h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
       @screen.raise(self)
       @screen.focus(self)
       @screen.modal = self
@@ -92,7 +88,7 @@ module CRT
       @buttons.each_with_index do |label, i|
         btn_text = " " * BUTTON_PAD + label + " " * BUTTON_PAD
         btn_w = Ansi::DisplayWidth.width(btn_text)
-        btn_style = theme.resolve(style, focused: i == @selected)
+        btn_style = i == @selected ? theme.field : Ansi::Style.new(fg: theme.bg, bg: theme.mid)
         canvas.write(bx, button_y, btn_text, btn_style)
         bx += btn_w + BUTTON_GAP
       end

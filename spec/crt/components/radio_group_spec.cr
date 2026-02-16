@@ -127,16 +127,17 @@ describe CRT::RadioGroup do
       render.cell(2, 1).grapheme.should eq("B")
     end
 
-    it "applies focus style to selected item text when focused" do
+    it "applies field_focus style to selected item text when focused" do
       screen = test_screen
       rg = CRT::RadioGroup.new(screen, x: 0, y: 0, items: ["A", "B"])
       screen.focus(rg)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).style.inverse.should be_false  # mark stays normal
-      render.cell(2, 0).style.inverse.should be_true   # item text is inverse
-      render.cell(2, 1).style.inverse.should be_false   # unselected row
+      # Selected + focused: field_focus (bright bg)
+      render.cell(2, 0).style.bg.should eq(CRT.theme.bright)
+      # Unselected: base style
+      render.cell(2, 1).style.bg.should eq(CRT.theme.bg)
     end
 
     it "no focus style when unfocused" do
@@ -145,7 +146,8 @@ describe CRT::RadioGroup do
       screen.draw
 
       render = screen.ansi.render
-      render.cell(2, 0).style.inverse.should be_false
+      # Selected but unfocused: field style (fg as bg)
+      render.cell(2, 0).style.bg.should eq(CRT.theme.fg)
     end
   end
 

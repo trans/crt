@@ -1,143 +1,98 @@
 require "../spec_helper"
 
 describe CRT::Theme do
-  describe "#resolve" do
-    it "returns base style with default theme" do
-      theme = CRT::Theme.new
-      base = CRT::Style.new(fg: CRT::Color.rgb(100, 200, 50))
+  theme = CRT::Theme.new(
+    bg: CRT::Color.rgb(40, 40, 50),
+    fg: CRT::Color.rgb(180, 180, 200))
 
-      theme.resolve(base).should eq(base)
-      theme.resolve(base, focused: true).should eq(base)
-      theme.resolve(base, active: true).should eq(base)
-      theme.resolve(base, focused: true, active: true).should eq(base)
+  describe "#bevel" do
+    it "returns a color between bg and fg at 15%" do
+      c = theme.bevel
+      c.red.should be > 40
+      c.red.should be < 180
+    end
+  end
+
+  describe "#dim" do
+    it "returns a color at 25% from bg toward fg" do
+      c = theme.dim
+      # lerp(40, 180, 0.25) = 75
+      c.red.should eq(75)
+      c.green.should eq(75)
+      c.blue.should eq(88) # lerp(50, 200, 0.25) = 87.5 → 88
+    end
+  end
+
+  describe "#mid" do
+    it "returns a color at 50% from bg toward fg" do
+      c = theme.mid
+      # lerp(40, 180, 0.5) = 110
+      c.red.should eq(110)
+      c.green.should eq(110)
+      c.blue.should eq(125)
+    end
+  end
+
+  describe "#bright" do
+    it "extends past fg toward white for dark bg" do
+      c = theme.bright
+      # Dark theme: extreme = white(255,255,255)
+      # lerp(180, 255, 0.5) = 218 (rounded)
+      c.red.should eq(218)
+      c.green.should eq(218)
+      c.blue.should eq(228) # lerp(200, 255, 0.5) = 227.5 → 228
     end
 
-    it "merges focused delta when focused" do
-      theme = CRT::Theme.new(focused: CRT::Style.new(bold: true))
-      base = CRT::Style.new(fg: CRT::Color.rgb(100, 200, 50))
-
-      result = theme.resolve(base, focused: true)
-      result.bold.should be_true
-      result.fg.should eq(base.fg)
-    end
-
-    it "merges unfocused delta when not focused" do
-      theme = CRT::Theme.new(unfocused: CRT::Style.new(dim: true))
-      base = CRT::Style.default
-
-      result = theme.resolve(base)
-      result.dim.should be_true
-    end
-
-    it "merges active delta when active" do
-      theme = CRT::Theme.new(active: CRT::Style.new(fg: CRT::Color.rgb(255, 0, 0)))
-      base = CRT::Style.default
-
-      result = theme.resolve(base, active: true)
-      result.fg.should eq(CRT::Color.rgb(255, 0, 0))
-    end
-
-    it "merges passive delta when not active" do
-      theme = CRT::Theme.new(passive: CRT::Style.new(dim: true))
-      base = CRT::Style.default
-
-      result = theme.resolve(base)
-      result.dim.should be_true
-    end
-
-    it "composes both axes" do
-      theme = CRT::Theme.new(
-        focused: CRT::Style.new(bold: true),
-        active: CRT::Style.new(italic: true))
-      base = CRT::Style.default
-
-      result = theme.resolve(base, focused: true, active: true)
-      result.bold.should be_true
-      result.italic.should be_true
-    end
-
-    it "focus merges last — focus color overrides active color" do
-      theme = CRT::Theme.new(
-        focused: CRT::Style.new(fg: CRT::Color.rgb(0, 255, 0)),
-        active: CRT::Style.new(fg: CRT::Color.rgb(255, 0, 0)))
-      base = CRT::Style.default
-
-      result = theme.resolve(base, focused: true, active: true)
-      result.fg.should eq(CRT::Color.rgb(0, 255, 0))
-    end
-
-    it "merges ghosted on top of everything" do
-      theme = CRT::Theme.new(
-        focused: CRT::Style.new(fg: CRT::Color.rgb(0, 255, 0)),
-        ghosted: CRT::Style.new(dim: true, fg: CRT::Color.rgb(80, 80, 80)))
-      base = CRT::Style.default
-
-      result = theme.resolve(base, focused: true, ghosted: true)
-      result.dim.should be_true
-      result.fg.should eq(CRT::Color.rgb(80, 80, 80))
-    end
-
-    it "does not apply ghosted when not ghosted" do
-      theme = CRT::Theme.new(
-        ghosted: CRT::Style.new(dim: true))
-      base = CRT::Style.default
-
-      result = theme.resolve(base)
-      result.dim.should be_false
+    it "extends past fg toward black for light bg" do
+      light = CRT::Theme.new(
+        bg: CRT::Color.rgb(220, 220, 230),
+        fg: CRT::Color.rgb(40, 40, 50))
+      c = light.bright
+      # Light theme: extreme = black(0,0,0)
+      # lerp(40, 0, 0.5) = 20
+      c.red.should eq(20)
+      c.green.should eq(20)
+      c.blue.should eq(25)
     end
   end
 
   describe "#base" do
-    it "merges base onto style before state deltas" do
-      theme = CRT::Theme.new(
-        base: CRT::Style.new(fg: CRT::Color.rgb(180, 180, 200),
-                              bg: CRT::Color.rgb(40, 40, 50)))
-
-      result = theme.resolve(CRT::Style.default)
-      result.fg.should eq(CRT::Color.rgb(180, 180, 200))
-      result.bg.should eq(CRT::Color.rgb(40, 40, 50))
+    it "returns fg text on bg background" do
+      s = theme.base
+      s.fg.should eq(theme.fg)
+      s.bg.should eq(theme.bg)
     end
+  end
 
-    it "widget style overrides base" do
-      theme = CRT::Theme.new(
-        base: CRT::Style.new(fg: CRT::Color.rgb(180, 180, 200)))
-      widget_style = CRT::Style.new(fg: CRT::Color.rgb(255, 0, 0))
-
-      result = theme.resolve(widget_style)
-      result.fg.should eq(CRT::Color.rgb(255, 0, 0))
+  describe "#field" do
+    it "returns swapped colors (bg text on fg background)" do
+      s = theme.field
+      s.fg.should eq(theme.bg)
+      s.bg.should eq(theme.fg)
     end
+  end
 
-    it "state deltas override base" do
-      theme = CRT::Theme.new(
-        base: CRT::Style.new(fg: CRT::Color.rgb(180, 180, 200)),
-        focused: CRT::Style.new(fg: CRT::Color.rgb(0, 255, 0)))
-
-      result = theme.resolve(CRT::Style.default, focused: true)
-      result.fg.should eq(CRT::Color.rgb(0, 255, 0))
-    end
-
-    it "base provides bg, state delta provides attribute" do
-      theme = CRT::Theme.new(
-        base: CRT::Style.new(bg: CRT::Color.rgb(40, 40, 50)),
-        focused: CRT::Style.new(bold: true))
-
-      result = theme.resolve(CRT::Style.default, focused: true)
-      result.bg.should eq(CRT::Color.rgb(40, 40, 50))
-      result.bold.should be_true
+  describe "#field_focus" do
+    it "returns bg text on bright background" do
+      s = theme.field_focus
+      s.fg.should eq(theme.bg)
+      s.bg.should eq(theme.bright)
     end
   end
 
   describe "CRT.theme" do
     it "returns the global theme" do
-      theme = CRT.theme
-      theme.should be_a(CRT::Theme)
-      theme.base.fg.should eq(CRT::Color.rgb(180, 180, 200))
-      theme.base.bg.should eq(CRT::Color.rgb(40, 40, 50))
+      t = CRT.theme
+      t.should be_a(CRT::Theme)
+      t.bg.should eq(CRT::Color.rgb(40, 40, 50))
+      t.fg.should eq(CRT::Color.rgb(180, 180, 200))
     end
 
     it "can be replaced" do
       original = CRT.theme
-      custom = CRT::Theme.new(base: CRT::Style.new(bold: true))
+      custom = CRT::Theme.new(
+        bg: CRT::Color.rgb(0, 0, 0),
+        fg: CRT::Color.rgb(255, 255, 255))
       CRT.theme = custom
       CRT.theme.should eq(custom)
       CRT.theme = original
@@ -146,11 +101,9 @@ describe CRT::Theme do
 
   describe "#copy_with" do
     it "creates a modified theme" do
-      theme = CRT::Theme.new(focused: CRT::Style::INVERSE)
-      modified = theme.copy_with(active: CRT::Style::BOLD)
-
-      modified.focused.should eq(CRT::Style::INVERSE)
-      modified.active.should eq(CRT::Style::BOLD)
+      modified = theme.copy_with(bg: CRT::Color.rgb(0, 0, 0))
+      modified.bg.should eq(CRT::Color.rgb(0, 0, 0))
+      modified.fg.should eq(theme.fg)
     end
   end
 end

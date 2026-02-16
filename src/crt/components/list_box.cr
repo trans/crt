@@ -1,9 +1,5 @@
 module CRT
   class ListBox < Widget
-    def self.default_theme : Theme
-      CRT.theme.copy_with(unfocused: Ansi::Style.default)
-    end
-
     @items : Array(String)
     @selected : Int32
     @scroll_y : Int32
@@ -19,7 +15,6 @@ module CRT
                    @marker : String = "▸",
                    border : Ansi::Border? = Ansi::Border::Single,
                    decor : Decor = Decor::None,
-                   theme : Theme = ListBox.default_theme,
                    &on_change : Int32 ->)
       @on_change = on_change
       @scroll_y = 0
@@ -27,8 +22,7 @@ module CRT
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
       ensure_visible
     end
 
@@ -39,16 +33,14 @@ module CRT
                    style : Ansi::Style = CRT.theme.base,
                    @marker : String = "▸",
                    border : Ansi::Border? = Ansi::Border::Single,
-                   decor : Decor = Decor::None,
-                   theme : Theme = ListBox.default_theme)
+                   decor : Decor = Decor::None)
       @on_change = nil
       @scroll_y = 0
       @marker_w = Ansi::DisplayWidth.width(@marker)
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
       ensure_visible
     end
 
@@ -85,7 +77,13 @@ module CRT
         is_selected = i == @selected
         prefix = is_selected ? @marker : " " * @marker_w
         display = "#{prefix} #{@items[i]}"
-        s = theme.resolve(style, focused: is_selected && focused?, active: is_selected)
+        s = if is_selected && focused?
+              theme.field_focus
+            elsif is_selected
+              theme.field
+            else
+              style
+            end
         canvas.write(content_x, content_y + row, display, s)
       end
     end

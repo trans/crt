@@ -199,24 +199,24 @@ describe CRT::ListBox do
       render.cell(3, 2).grapheme.should eq("B")
     end
 
-    it "applies focus style to selected row when focused" do
+    it "applies field_focus style to selected row when focused" do
       screen = test_screen
       lb = CRT::ListBox.new(screen, x: 0, y: 0, items: ["A", "B"])
       screen.focus(lb)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(1, 1).style.inverse.should be_true  # selected row
-      render.cell(1, 2).style.inverse.should be_false  # unselected row
+      render.cell(1, 1).style.bg.should eq(CRT.theme.bright)  # selected row
+      render.cell(1, 2).style.bg.should eq(CRT.theme.bg)       # unselected row
     end
 
-    it "no focus style when unfocused" do
+    it "selected uses field style when unfocused" do
       screen = test_screen
       lb = CRT::ListBox.new(screen, x: 0, y: 0, items: ["A", "B"])
       screen.draw
 
       render = screen.ansi.render
-      render.cell(1, 1).style.inverse.should be_false
+      render.cell(1, 1).style.bg.should eq(CRT.theme.fg)
     end
 
     it "renders only visible items when scrolled" do

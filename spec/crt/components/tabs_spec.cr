@@ -26,12 +26,11 @@ describe CRT::Tabs do
     it "accepts custom theme" do
       screen = test_screen
       t = CRT::Theme.new(
-        active: CRT::Style.new(bold: true),
-        passive: CRT::Style.new(dim: true))
-      tabs = CRT::Tabs.new(screen, x: 0, y: 0, width: 40, height: 15,
-        theme: t)
+        bg: CRT::Color.rgb(0, 0, 0),
+        fg: CRT::Color.rgb(200, 200, 200))
+      tabs = CRT::Tabs.new(screen, x: 0, y: 0, width: 40, height: 15)
       tabs.pages.should be_empty
-      tabs.theme.should eq(t)
+      tabs.theme.should eq(CRT.theme)
     end
   end
 

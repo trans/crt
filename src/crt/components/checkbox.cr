@@ -1,9 +1,5 @@
 module CRT
   class Checkbox < Widget
-    def self.default_theme : Theme
-      CRT.theme.copy_with(unfocused: Ansi::Style.default)
-    end
-
     @text : String
     @checked : Bool
     @checked_mark : String
@@ -21,13 +17,11 @@ module CRT
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
                    @pad : Int32 = 0,
-                   theme : Theme = Checkbox.default_theme,
                    &on_change : Bool ->)
       @on_change = on_change
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -39,13 +33,11 @@ module CRT
                    @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
-                   @pad : Int32 = 0,
-                   theme : Theme = Checkbox.default_theme)
+                   @pad : Int32 = 0)
       @on_change = nil
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def text : String
@@ -80,7 +72,7 @@ module CRT
     end
 
     def draw(canvas : Ansi::Canvas) : Nil
-      resolved = theme.resolve(style, focused: focused?)
+      resolved = focused? ? theme.field : style
       p = canvas.panel(x, y, w: width, h: height)
       if b = border
         p = p.border(b, style)

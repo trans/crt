@@ -12,12 +12,6 @@ module CRT
     @track_style : Ansi::Style
     @on_change : (String -> Nil)?
 
-    def self.default_theme : Theme
-      CRT.theme.copy_with(
-        focused: Ansi::Style.new(bg: Ansi::Color.rgb(255, 255, 255)),
-        unfocused: Ansi::Style.default)
-    end
-
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    width : Int32, height : Int32,
                    text : String = "",
@@ -25,10 +19,9 @@ module CRT
                    @scrollbar : Bool = false,
                    @thumb_style : Ansi::Style = Slider::THUMB_DEFAULT,
                    @track_style : Ansi::Style = Slider::TRACK_DEFAULT,
-                   style : Ansi::Style = CRT.theme.field_style,
+                   style : Ansi::Style = CRT.theme.field,
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
-                   theme : Theme = EntryBox.default_theme,
                    &on_change : String ->)
       @on_change = on_change
       @cursor_line = 0
@@ -37,8 +30,7 @@ module CRT
       @lines = text.split('\n').map { |l| Ansi::EditLine.new(l) }
       @lines << Ansi::EditLine.new("") if @lines.empty?
       super(screen, x: x, y: y, width: width, height: height,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -48,10 +40,9 @@ module CRT
                    @scrollbar : Bool = false,
                    @thumb_style : Ansi::Style = Slider::THUMB_DEFAULT,
                    @track_style : Ansi::Style = Slider::TRACK_DEFAULT,
-                   style : Ansi::Style = CRT.theme.field_style,
+                   style : Ansi::Style = CRT.theme.field,
                    border : Ansi::Border? = nil,
-                   decor : Decor = Decor::None,
-                   theme : Theme = EntryBox.default_theme)
+                   decor : Decor = Decor::None)
       @on_change = nil
       @cursor_line = 0
       @scroll_y = 0
@@ -59,8 +50,7 @@ module CRT
       @lines = text.split('\n').map { |l| Ansi::EditLine.new(l) }
       @lines << Ansi::EditLine.new("") if @lines.empty?
       super(screen, x: x, y: y, width: width, height: height,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def text : String
@@ -90,7 +80,7 @@ module CRT
     property on_change : (String -> Nil)?
 
     def draw(canvas : Ansi::Canvas) : Nil
-      fill_style = theme.resolve(style, focused: focused?)
+      fill_style = focused? ? theme.field_focus : style
       panel(canvas).fill(fill_style).draw
 
       avail_w = content_width

@@ -17,14 +17,12 @@ module CRT
                    @pad : Int32 = 1,
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
-                   theme : Theme = CRT.theme,
                    &on_change : Int32 ->)
       @on_change = on_change
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -36,14 +34,12 @@ module CRT
                    @right_mark : String = "►",
                    @pad : Int32 = 1,
                    border : Ansi::Border? = nil,
-                   decor : Decor = Decor::None,
-                   theme : Theme = CRT.theme)
+                   decor : Decor = Decor::None)
       @on_change = nil
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     getter items : Array(String)
@@ -92,7 +88,7 @@ module CRT
       pad_left = {pad_total // 2, 0}.max
       pad_right = {pad_total - pad_left, 0}.max
       padded = " " * @pad + " " * pad_left + item + " " * pad_right + " " * @pad
-      resolved = theme.resolve(style, focused: focused?)
+      resolved = focused? ? theme.field : style
       canvas.write(content_x + lm_w, cy, padded, resolved)
       # Right mark
       canvas.write(content_x + content_width - rm_w, cy, @right_mark, style)

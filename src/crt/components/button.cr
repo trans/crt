@@ -4,41 +4,31 @@ module CRT
     @pad : Int32
     @action : (-> Nil)?
 
-    def self.default_theme : Theme
-      CRT.theme.copy_with(
-        focused: Ansi::Style.new(bg: Ansi::Color.rgb(255, 255, 255)),
-        unfocused: Ansi::Style.default)
-    end
-
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    @text : String,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = CRT.theme.field_style,
+                   style : Ansi::Style = CRT.theme.field,
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
                    @pad : Int32 = 2,
-                   theme : Theme = Button.default_theme,
                    &action : -> Nil)
       @action = action
       w, h = compute_size(@text, border, @pad)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    @text : String,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = CRT.theme.field_style,
+                   style : Ansi::Style = CRT.theme.field,
                    border : Ansi::Border? = nil,
                    decor : Decor = Decor::None,
-                   @pad : Int32 = 2,
-                   theme : Theme = Button.default_theme)
+                   @pad : Int32 = 2)
       @action = nil
       w, h = compute_size(@text, border, @pad)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def text : String
@@ -51,7 +41,7 @@ module CRT
     property action : (-> Nil)?
 
     def draw(canvas : Ansi::Canvas) : Nil
-      active = theme.resolve(style, focused: focused?)
+      active = focused? ? theme.field_focus : style
       p = canvas.panel(x, y, w: width, h: height)
       if b = border
         p = p.border(b, active)

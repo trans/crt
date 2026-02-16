@@ -119,24 +119,25 @@ describe CRT::Checkbox do
       render.cell(0, 0).grapheme.should eq("⬛")
     end
 
-    it "applies inverse style to text when focused" do
+    it "applies field style to text when focused" do
       screen = test_screen
       cb = CRT::Checkbox.new(screen, x: 0, y: 0, text: "Option")
       screen.focus(cb)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(0, 0).style.inverse.should be_false  # mark stays normal
-      render.cell(3, 0).style.inverse.should be_true    # text is inverse
+      # Text gets field style (swapped colors)
+      render.cell(3, 0).style.bg.should eq(CRT.theme.fg)
+      render.cell(3, 0).style.fg.should eq(CRT.theme.bg)
     end
 
-    it "uses normal style when unfocused" do
+    it "uses base style when unfocused" do
       screen = test_screen
       cb = CRT::Checkbox.new(screen, x: 0, y: 0, text: "Option")
       screen.draw
 
       render = screen.ansi.render
-      render.cell(3, 0).style.inverse.should be_false
+      render.cell(3, 0).style.bg.should eq(CRT.theme.bg)
     end
   end
 

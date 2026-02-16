@@ -151,22 +151,19 @@ describe CRT::ItemList do
       screen.draw
 
       render = screen.ansi.render
-      # Left mark: normal
-      render.cell(0, 0).style.inverse.should be_false
-      # Right mark: normal
-      render.cell(il.width - 1, 0).style.inverse.should be_false
-      # Item area: inverse (mark_w=1 + pad=1 = offset 2)
-      render.cell(2, 0).style.inverse.should be_true
+      # Left mark: base style
+      render.cell(0, 0).style.bg.should eq(CRT.theme.bg)
+      # Item area: field style (swapped colors)
+      render.cell(2, 0).style.bg.should eq(CRT.theme.fg)
     end
 
-    it "unfocused style is dim inverse" do
+    it "unfocused style uses base colors" do
       screen = test_screen
       il = CRT::ItemList.new(screen, x: 0, y: 0, items: ["A", "B"])
       screen.draw
 
       render = screen.ansi.render
-      render.cell(2, 0).style.inverse.should be_true
-      render.cell(2, 0).style.dim.should be_true
+      render.cell(2, 0).style.bg.should eq(CRT.theme.bg)
     end
 
     it "updates display after selection change" do

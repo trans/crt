@@ -236,18 +236,18 @@ describe CRT::Dialog do
       found.should be_true
     end
 
-    it "selected button has focus style" do
+    it "selected button has field style" do
       screen = test_screen
       d = CRT::Dialog.new(screen, message: "Test", buttons: ["A", "B"])
       d.handle_event(CRT::Ansi::Key.new(CRT::Ansi::Key::Code::Right))
       screen.draw
 
       render = screen.ansi.render
-      # Find "B" button — it should have inverse style
+      # Find "B" button — it should have field style (swapped colors)
       (d.content_x..d.content_x + d.content_width - 1).each do |cx|
         (d.content_y..d.content_y + d.content_height - 1).each do |cy|
           if render.cell(cx, cy).grapheme == "B"
-            render.cell(cx, cy).style.inverse.should be_true
+            render.cell(cx, cy).style.bg.should eq(CRT.theme.fg)
           end
         end
       end

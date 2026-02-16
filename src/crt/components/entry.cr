@@ -5,45 +5,35 @@ module CRT
     @pad : Int32
     @on_submit : (String -> Nil)?
 
-    def self.default_theme : Theme
-      CRT.theme.copy_with(
-        focused: Ansi::Style.new(bg: Ansi::Color.rgb(255, 255, 255)),
-        unfocused: Ansi::Style.default)
-    end
-
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    width : Int32,
                    text : String = "",
-                   style : Ansi::Style = CRT.theme.field_style,
+                   style : Ansi::Style = CRT.theme.field,
                    @cursor_style : Ansi::Style = Ansi::Style::INVERSE,
                    border : Ansi::Border? = Ansi::Border::Single,
                    decor : Decor = Decor::None,
                    @pad : Int32 = 1,
-                   theme : Theme = Entry.default_theme,
                    &on_submit : String ->)
       @on_submit = on_submit
       @line = Ansi::EditLine.new(text)
       h = 1 + (border ? 2 : 0)
       super(screen, x: x, y: y, width: width, height: h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    width : Int32,
                    text : String = "",
-                   style : Ansi::Style = CRT.theme.field_style,
+                   style : Ansi::Style = CRT.theme.field,
                    @cursor_style : Ansi::Style = Ansi::Style::INVERSE,
                    border : Ansi::Border? = Ansi::Border::Single,
                    decor : Decor = Decor::None,
-                   @pad : Int32 = 1,
-                   theme : Theme = Entry.default_theme)
+                   @pad : Int32 = 1)
       @on_submit = nil
       @line = Ansi::EditLine.new(text)
       h = 1 + (border ? 2 : 0)
       super(screen, x: x, y: y, width: width, height: h,
-            style: style, border: border, decor: decor, focusable: true,
-            theme: theme)
+            style: style, border: border, decor: decor, focusable: true)
     end
 
     def text : String
@@ -65,7 +55,7 @@ module CRT
     property on_submit : (String -> Nil)?
 
     def draw(canvas : Ansi::Canvas) : Nil
-      fill_style = theme.resolve(style, focused: focused?)
+      fill_style = focused? ? theme.field_focus : style
       p = canvas.panel(x, y, w: width, h: height)
       if b = border
         p = p.border(b, fill_style)
