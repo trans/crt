@@ -98,6 +98,27 @@ describe CRT::Widget do
       widget.content_width.should eq(18)
       widget.content_height.should eq(8)
     end
+
+    it "insets by 1 with box (border nil)" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      widget = TestWidget.new(screen, x: 5, y: 3, width: 20, height: 10, box: boxing)
+      widget.content_x.should eq(6)
+      widget.content_y.should eq(4)
+      widget.content_width.should eq(18)
+      widget.content_height.should eq(8)
+    end
+
+    it "no inset with box and border None" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      widget = TestWidget.new(screen, x: 5, y: 3, width: 20, height: 10,
+        box: boxing, border: CRT::Ansi::Border::None)
+      widget.content_x.should eq(5)
+      widget.content_y.should eq(3)
+      widget.content_width.should eq(20)
+      widget.content_height.should eq(10)
+    end
   end
 
   describe "#hit?" do
@@ -125,6 +146,57 @@ describe CRT::Widget do
       widget = TestWidget.new(screen, x: 0, y: 0, width: 10, height: 5)
       event = CRT::Ansi::Key.char('a')
       widget.handle_event(event).should be_false
+    end
+  end
+
+  describe "boxing integration" do
+    it "registers with boxing on construction" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      TestWidget.new(screen, x: 2, y: 3, width: 10, height: 5, box: boxing)
+      boxing.width.should eq(12)
+      boxing.height.should eq(8)
+      boxing.edges_at(2, 3).should eq(
+        CRT::Ansi::Boxing::Edge::Right | CRT::Ansi::Boxing::Edge::Down
+      )
+    end
+
+    it "does not register with boxing when border is None" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      TestWidget.new(screen, x: 2, y: 3, width: 10, height: 5,
+        box: boxing, border: CRT::Ansi::Border::None)
+      boxing.width.should eq(0)
+      boxing.height.should eq(0)
+    end
+
+    it "unregisters from boxing on destroy" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      w = TestWidget.new(screen, x: 0, y: 0, width: 10, height: 5, box: boxing)
+      boxing.edges_at(0, 0).should_not eq(CRT::Ansi::Boxing::Edge::None)
+      w.destroy
+      boxing.edges_at(0, 0).should eq(CRT::Ansi::Boxing::Edge::None)
+    end
+
+    it "tracks boxing on screen" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      TestWidget.new(screen, x: 0, y: 0, width: 10, height: 5, box: boxing)
+      # Boxing should be drawn during screen draw (no crash = success)
+      screen.draw
+    end
+
+    it "adjacent widgets share boxing intersections" do
+      screen = test_screen
+      boxing = CRT::Ansi::Boxing.new
+      TestWidget.new(screen, x: 0, y: 0, width: 6, height: 3, box: boxing)
+      TestWidget.new(screen, x: 5, y: 0, width: 6, height: 3, box: boxing)
+      # Shared edge creates T-junction
+      edge = boxing.edges_at(5, 0)
+      edge.left?.should be_true
+      edge.right?.should be_true
+      edge.down?.should be_true
     end
   end
 end

@@ -15,14 +15,16 @@ module CRT
                    style : Ansi::Style = Ansi::Style.default,
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
+                   box : Ansi::Boxing? = nil,
                    @align : Ansi::Align = Ansi::Align::Left,
                    @valign : Ansi::VAlign = Ansi::VAlign::Top,
                    @wrap : Ansi::Wrap = Ansi::Wrap::None,
                    @pad : Int32 = 0,
                    @fill : Ansi::Style | Ansi::Style::Char | Nil = nil)
-      w, h = compute_size(@text, border, @pad)
+      has_border = box ? border != Ansi::Border::None : !border.nil?
+      w, h = compute_size(@text, has_border, @pad)
       super(screen, x: @x, y: @y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow)
+            style: style, border: border, shadow: shadow, box: box)
     end
 
     def text : String | Ansi::Style::Text
@@ -43,13 +45,13 @@ module CRT
     end
 
     private def compute_size(text : String | Ansi::Style::Text,
-                             border : Ansi::Border?, pad : Int32) : {Int32, Int32}
+                             has_border : Bool, pad : Int32) : {Int32, Int32}
       str = case text
             in String           then text
             in Ansi::Style::Text then text.to_s
             end
       lines = str.split('\n')
-      inset = border ? 2 : 0
+      inset = has_border ? 2 : 0
       padding = pad * 2
       content_w = Ansi::DisplayWidth.max_width(lines)
       content_h = lines.size

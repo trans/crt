@@ -31,6 +31,10 @@ class FocusableWidget < CRT::Widget
   end
 
   def handle_event(event : CRT::Ansi::Event) : Bool
+    case event
+    when CRT::Ansi::Key
+      return false if event.code.tab?
+    end
     @last_event = event
     true
   end

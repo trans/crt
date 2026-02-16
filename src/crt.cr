@@ -6,9 +6,15 @@ module CRT
   alias Style  = Ansi::Style
   alias Color  = Ansi::Color
   alias Border = Ansi::Border
+  alias Boxing = Ansi::Boxing
   alias Key    = Ansi::Key
   alias Mouse  = Ansi::Mouse
   alias Event  = Ansi::Event
+
+  enum Direction
+    Column
+    Row
+  end
 end
 
 require "./crt/widget"
@@ -25,3 +31,4 @@ require "./crt/components/text_box"
 require "./crt/components/entry_box"
 require "./crt/components/dialog"
 require "./crt/components/item_list"
+require "./crt/components/frame"

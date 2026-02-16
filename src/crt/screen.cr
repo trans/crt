@@ -4,12 +4,14 @@ module CRT
     getter widgets : Array(Widget)
     @focused : Widget?
     property modal : Widget?
+    @boxing_instances : Array(Ansi::Boxing)
 
     def initialize(io : IO = STDOUT, **opts)
       @ansi = Ansi::Screen.new(io, **opts)
       @widgets = [] of Widget
       @focused = nil
       @modal = nil
+      @boxing_instances = [] of Ansi::Boxing
     end
 
     def self.open(io : IO = STDOUT, **opts, &) : Nil
@@ -56,12 +58,20 @@ module CRT
       @widgets.each do |widget|
         widget.draw(@ansi.render) if widget.visible?
       end
+      @boxing_instances.each { |b| b.draw(@ansi.render) }
+      @widgets.each do |widget|
+        widget.draw_overlay(@ansi.render) if widget.visible?
+      end
     end
 
     # Widget management
 
     def register(widget : Widget) : Nil
       @widgets << widget unless @widgets.includes?(widget)
+    end
+
+    def track_boxing(boxing : Ansi::Boxing) : Nil
+      @boxing_instances << boxing unless @boxing_instances.includes?(boxing)
     end
 
     def unregister(widget : Widget) : Nil
@@ -91,12 +101,12 @@ module CRT
       @focused
     end
 
-    def focus(widget : Widget) : Nil
+    def focus(widget : Widget, direction : Int32 = 1) : Nil
       return unless @widgets.includes?(widget)
       return unless widget.focusable? && widget.visible?
       @focused.try(&.unfocus)
       @focused = widget
-      widget.focus
+      widget.focus(direction)
     end
 
     def focus_next : Nil
@@ -117,11 +127,11 @@ module CRT
       case event
       when Ansi::Key
         if event.code.tab?
-          if event.shift?
-            focus_prev
-          else
-            focus_next
+          # Let focused widget handle Tab first (e.g. Frame cycling children).
+          if fw = focused_widget
+            return true if fw.handle_event(event)
           end
+          event.shift? ? focus_prev : focus_next
           return true
         end
       end
@@ -180,7 +190,7 @@ module CRT
         target_idx = direction > 0 ? 0 : focusable.size - 1
       end
 
-      focus(focusable[target_idx])
+      focus(focusable[target_idx], direction)
     end
   end
 end
