@@ -12,9 +12,9 @@ module CRT
                    width : Int32? = nil, height : Int32? = nil,
                    @text : String | Ansi::Style::Text = "",
                    @text_style : Ansi::Style = Ansi::Style.default,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    box : Ansi::Boxing? = nil,
                    @align : Ansi::Align = Ansi::Align::Left,
                    @valign : Ansi::VAlign = Ansi::VAlign::Top,
@@ -24,7 +24,7 @@ module CRT
       has_border = box ? border != Ansi::Border::None : !border.nil?
       w, h = compute_size(@text, has_border, @pad)
       super(screen, x: @x, y: @y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, box: box)
+            style: style, border: border, decor: decor, box: box)
     end
 
     def text : String | Ansi::Style::Text
@@ -40,7 +40,8 @@ module CRT
       if f = @fill
         p = p.fill(f)
       end
-      p.text(@text, style: @text_style, align: @align, valign: @valign,
+      ts = style.merge(@text_style)
+      p.text(@text, style: ts, align: @align, valign: @valign,
              wrap: @wrap, pad: @pad).draw
     end
 

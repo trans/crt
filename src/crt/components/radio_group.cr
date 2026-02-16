@@ -1,6 +1,8 @@
 module CRT
   class RadioGroup < Widget
-    THEME_DEFAULT = Theme.new(focused: Ansi::Style::INVERSE)
+    def self.default_theme : Theme
+      CRT.theme.copy_with(unfocused: Ansi::Style.default)
+    end
 
     @items : Array(String)
     @selected : Int32
@@ -12,18 +14,18 @@ module CRT
                    @items : Array(String),
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @selected_mark : String = "⬤",
                    @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
-                   theme : Theme = THEME_DEFAULT,
+                   decor : Decor = Decor::None,
+                   theme : Theme = RadioGroup.default_theme,
                    &on_change : Int32 ->)
       @on_change = on_change
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
     end
 
@@ -31,17 +33,17 @@ module CRT
                    @items : Array(String),
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @selected_mark : String = "⬤",
                    @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
-                   theme : Theme = THEME_DEFAULT)
+                   decor : Decor = Decor::None,
+                   theme : Theme = RadioGroup.default_theme)
       @on_change = nil
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
     end
 
@@ -70,7 +72,11 @@ module CRT
       if b = border
         p = p.border(b, style)
       end
-      p = p.shadow if shadow
+      case decor
+      when .shadow? then p = p.shadow
+      when .bevel?  then p = p.bevel
+      else               # none
+      end
       p.fill(style).draw
 
       mark_w = {Ansi::DisplayWidth.width(@selected_mark),

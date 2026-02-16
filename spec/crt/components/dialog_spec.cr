@@ -13,7 +13,7 @@ describe CRT::Dialog do
       screen = test_screen
       d = CRT::Dialog.new(screen, message: "Test")
       # test_screen is 80x24
-      d.x.should eq(screen.center_x(d.width + 1)) # +1 for shadow
+      d.x.should eq(screen.center_x(d.width + 1)) # +1 for decor
       d.y.should eq(screen.center_y(d.height + 1))
     end
 

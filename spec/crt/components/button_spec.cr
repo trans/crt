@@ -49,24 +49,23 @@ describe CRT::Button do
       row0.should contain("K")
     end
 
-    it "applies inverse style when focused" do
+    it "applies white background when focused" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
       screen.focus(button)
       screen.draw
 
       render = screen.ansi.render
-      render.cell(2, 0).style.inverse.should be_true
+      render.cell(2, 0).style.bg.should eq(CRT::Color.rgb(255, 255, 255))
     end
 
-    it "uses dim inverse style when unfocused" do
+    it "uses field_style colors when unfocused" do
       screen = test_screen
       button = CRT::Button.new(screen, x: 0, y: 0, text: "OK")
       screen.draw
 
       render = screen.ansi.render
-      render.cell(2, 0).style.inverse.should be_true
-      render.cell(2, 0).style.dim.should be_true
+      render.cell(2, 0).style.bg.should eq(CRT.theme.base.fg)
     end
   end
 

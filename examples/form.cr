@@ -2,8 +2,7 @@ require "../src/crt"
 
 CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen|
   # Title
-  title_style = CRT::Style.new(bold: true, fg: CRT::Color.rgb(120, 200, 255))
-  CRT::Label.new(screen, x: 2, y: 1, text: "CRT Widget Demo", style: title_style)
+  CRT::Label.new(screen, x: 2, y: 1, text: "CRT Widget Demo")
 
   # Name field
   CRT::Label.new(screen, x: 2, y: 3, text: "Name:")
@@ -22,15 +21,10 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
 
   # Progress bar
   CRT::Label.new(screen, x: 2, y: 15, text: "Progress:")
-  fill_style = CRT::Style.new(fg: CRT::Color.rgb(80, 220, 120))
-  empty_style = CRT::Style.new(fg: CRT::Color.rgb(60, 60, 60))
-  progress = CRT::ProgressBar.new(screen, x: 13, y: 15, width: 27,
-    fill_style: fill_style, empty_style: empty_style)
+  progress = CRT::ProgressBar.new(screen, x: 13, y: 15, width: 27)
 
   # Status label
-  status_style = CRT::Style.new(fg: CRT::Color.rgb(100, 255, 100))
-  status = CRT::Label.new(screen, x: 2, y: 21, width: 50, height: 1,
-    text: "", style: status_style)
+  status = CRT::Label.new(screen, x: 2, y: 21, width: 50, height: 1, text: "")
 
   # Submit button
   submit = CRT::Button.new(screen, x: 10, y: 17, text: "Submit") do
@@ -45,9 +39,7 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
   end
 
   # Quit hint
-  hint_style = CRT::Style.new(dim: true)
-  CRT::Label.new(screen, x: 2, y: 23, text: "Tab/Shift+Tab to navigate | Ctrl+C to quit",
-    style: hint_style)
+  CRT::Label.new(screen, x: 2, y: 23, text: "Tab/Shift+Tab to navigate | Ctrl+C to quit")
 
   # Focus the first entry
   screen.focus(name_entry)

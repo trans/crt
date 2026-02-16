@@ -1,22 +1,11 @@
 require "../src/crt"
 
-CODE = <<-CRYSTAL
-  CRT::ProgressBar.new(screen, x: 2, y: 5,
-    width: 30)
-  CRYSTAL
-
 CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen|
-  # Code
-  code_style = CRT::Style.new(fg: CRT::Color.rgb(180, 180, 180))
-  CRT::Label.new(screen, x: 2, y: 1, text: CODE, style: code_style,
-    border: CRT::Border::Rounded, pad: 1)
-
   # Widget
-  bar = CRT::ProgressBar.new(screen, x: 2, y: 5, width: 30)
+  bar = CRT::ProgressBar.new(screen, x: 2, y: 1, width: 30)
 
   # Quit hint
-  hint_style = CRT::Style.new(dim: true)
-  CRT::Label.new(screen, x: 2, y: 8, text: "Ctrl+C to quit", style: hint_style)
+  CRT::Label.new(screen, x: 2, y: 4, text: "Ctrl+C to quit")
 
   screen.run(fps: 30) do
     bar.value = (bar.value + 0.005) % 1.0

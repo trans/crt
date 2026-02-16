@@ -1,6 +1,8 @@
 module CRT
   class ListBox < Widget
-    THEME_DEFAULT = Theme.new(focused: Ansi::Style::INVERSE)
+    def self.default_theme : Theme
+      CRT.theme.copy_with(unfocused: Ansi::Style.default)
+    end
 
     @items : Array(String)
     @selected : Int32
@@ -13,11 +15,11 @@ module CRT
                    @items : Array(String),
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @marker : String = "▸",
                    border : Ansi::Border? = Ansi::Border::Single,
-                   shadow : Bool = false,
-                   theme : Theme = THEME_DEFAULT,
+                   decor : Decor = Decor::None,
+                   theme : Theme = ListBox.default_theme,
                    &on_change : Int32 ->)
       @on_change = on_change
       @scroll_y = 0
@@ -25,7 +27,7 @@ module CRT
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
       ensure_visible
     end
@@ -34,18 +36,18 @@ module CRT
                    @items : Array(String),
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @marker : String = "▸",
                    border : Ansi::Border? = Ansi::Border::Single,
-                   shadow : Bool = false,
-                   theme : Theme = THEME_DEFAULT)
+                   decor : Decor = Decor::None,
+                   theme : Theme = ListBox.default_theme)
       @on_change = nil
       @scroll_y = 0
       @marker_w = Ansi::DisplayWidth.width(@marker)
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
       ensure_visible
     end

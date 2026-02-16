@@ -19,10 +19,10 @@ class FocusableWidget < CRT::Widget
                  width : Int32, height : Int32,
                  style : CRT::Ansi::Style = CRT::Ansi::Style.default,
                  border : CRT::Ansi::Border? = nil,
-                 shadow : Bool = false,
+                 decor : CRT::Decor = CRT::Decor::None,
                  visible : Bool = true)
     super(screen, x: x, y: y, width: width, height: height,
-          style: style, border: border, shadow: shadow,
+          style: style, border: border, decor: decor,
           visible: visible, focusable: true)
   end
 

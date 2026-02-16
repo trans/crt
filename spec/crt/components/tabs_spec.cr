@@ -60,14 +60,14 @@ describe CRT::Tabs do
         border: CRT::Border::Single, separator: true)
       frame = tabs.add("Tab 1")
 
-      # content_x = 5 + 1 = 6, content_y = 3 + 1 = 4
-      # page_y = content_y + 1 (tab bar) + 1 (separator) = 6
-      frame.x.should eq(6)
-      frame.y.should eq(6)
-      # page_width = content_width = 40 - 2 = 38
-      frame.width.should eq(38)
-      # page_height = content_height - 1 - 1 = 13 - 2 = 11
-      frame.height.should eq(11)
+      # content_x = 5 + 1 = 6, +1 padding = 7
+      # content_y = 3 + 1 = 4, +2 (tab bar + padding) + 1 (separator) = 7
+      frame.x.should eq(8)
+      frame.y.should eq(7)
+      # page_width = content_width - 2 = 38 - 2 = 36
+      frame.width.should eq(36)
+      # page_height = content_height - 2 - 1 = 13 - 3 = 10
+      frame.height.should eq(10)
     end
 
     it "positions page frame without separator" do
@@ -76,11 +76,11 @@ describe CRT::Tabs do
         separator: false)
       frame = tabs.add("Tab 1")
 
-      # No border, no separator: page_y = 0 + 1 (tab bar) = 1
-      frame.x.should eq(0)
-      frame.y.should eq(1)
-      frame.width.should eq(40)
-      frame.height.should eq(14) # 15 - 1
+      # No border, no separator: page_x = 0 + 1, page_y = 0 + 2
+      frame.x.should eq(2)
+      frame.y.should eq(2)
+      frame.width.should eq(38)
+      frame.height.should eq(13) # 15 - 2
     end
 
     it "first page becomes active" do
@@ -147,11 +147,10 @@ describe CRT::Tabs do
       render = CRT::Ansi::Render.new(io, 40, 10)
       tabs.draw(render)
 
-      # Active tab: "▸Alpha " starting at x=1
-      # "▸" is 1 wide, "Alpha" is 5 wide, " " is 1 wide = 7 chars
-      render.cell(1, 0).grapheme.should eq("▸")
-      render.cell(2, 0).grapheme.should eq("A")
-      render.cell(3, 0).grapheme.should eq("l")
+      # Active tab: " Alpha " starting at x=0
+      render.cell(0, 0).grapheme.should eq(" ")
+      render.cell(1, 0).grapheme.should eq("A")
+      render.cell(2, 0).grapheme.should eq("l")
     end
 
     it "draws separator line" do

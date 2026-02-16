@@ -1,25 +1,15 @@
 require "../src/crt"
 
-CODE = <<-CRYSTAL
-  CRT::Slider.new(screen, x: 2, y: 5,
-    length: 10, thumb_size: 0.3)
-  CRYSTAL
-
 CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen|
-  # Code
-  code_style = CRT::Style.new(fg: CRT::Color.rgb(180, 180, 180))
-  CRT::Label.new(screen, x: 2, y: 1, text: CODE, style: code_style,
-    border: CRT::Border::Rounded, pad: 1)
+  # Vertical slider
+  vsb = CRT::Slider.new(screen, x: 2, y: 1, length: 10, thumb_size: 0.3)
 
-  # Vertical scrollbar
-  vsb = CRT::Slider.new(screen, x: 2, y: 5, length: 10, thumb_size: 0.3)
-
-  # Horizontal scrollbar
-  hsb = CRT::Slider.new(screen, x: 5, y: 5,
+  # Horizontal slider
+  hsb = CRT::Slider.new(screen, x: 5, y: 1,
     orientation: CRT::Orientation::Horizontal, length: 20, thumb_size: 0.3)
 
   # Value label
-  val_label = CRT::Label.new(screen, x: 5, y: 7, width: 20, height: 1, text: "V: 0.0  H: 0.0")
+  val_label = CRT::Label.new(screen, x: 5, y: 3, width: 20, height: 1, text: "V: 0.0  H: 0.0")
 
   vsb.on_change = ->(v : Float64) { val_label.text = "V: #{v.round(2)}  H: #{hsb.value.round(2)}"; nil }
   hsb.on_change = ->(v : Float64) { val_label.text = "V: #{vsb.value.round(2)}  H: #{v.round(2)}"; nil }
@@ -27,9 +17,7 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
   screen.focus(vsb)
 
   # Quit hint
-  hint_style = CRT::Style.new(dim: true)
-  CRT::Label.new(screen, x: 2, y: 16, text: "Up/Down to scroll | Tab to switch | Ctrl+C to quit",
-    style: hint_style)
+  CRT::Label.new(screen, x: 2, y: 12, text: "Up/Down to scroll | Tab to switch | Ctrl+C to quit")
 
   screen.run(fps: 30) do
     screen.each_event do |event|

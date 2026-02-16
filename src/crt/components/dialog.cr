@@ -7,10 +7,6 @@ module CRT
     BUTTON_PAD = 2
     BUTTON_GAP = 2
 
-    THEME_DEFAULT = Theme.new(
-      focused: Ansi::Style::INVERSE,
-      unfocused: Ansi::Style.new(dim: true, inverse: true))
-
     @title : String?
     @message_lines : Array(String)
     @buttons : Array(String)
@@ -21,19 +17,19 @@ module CRT
                    @title : String? = nil,
                    message : String,
                    @buttons : Array(String) = ["OK"],
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border = Ansi::Border::Rounded,
-                   shadow : Bool = true,
-                   theme : Theme = THEME_DEFAULT,
+                   decor : Decor = Decor::Shadow,
+                   theme : Theme = CRT.theme,
                    &on_choice : Int32 ->)
       @on_choice = on_choice
       @selected = 0
       @message_lines = message.split('\n')
       w, h = compute_size(border)
-      cx = screen.center_x(w + (shadow ? 1 : 0))
-      cy = screen.center_y(h + (shadow ? 1 : 0))
+      cx = screen.center_x(w + (decor.none? ? 0 : 1))
+      cy = screen.center_y(h + (decor.none? ? 0 : 1))
       super(screen, x: cx, y: cy, width: w, height: h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
       @screen.raise(self)
       @screen.focus(self)
@@ -44,18 +40,18 @@ module CRT
                    @title : String? = nil,
                    message : String,
                    @buttons : Array(String) = ["OK"],
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border = Ansi::Border::Rounded,
-                   shadow : Bool = true,
-                   theme : Theme = THEME_DEFAULT)
+                   decor : Decor = Decor::Shadow,
+                   theme : Theme = CRT.theme)
       @on_choice = nil
       @selected = 0
       @message_lines = message.split('\n')
       w, h = compute_size(border)
-      cx = screen.center_x(w + (shadow ? 1 : 0))
-      cy = screen.center_y(h + (shadow ? 1 : 0))
+      cx = screen.center_x(w + (decor.none? ? 0 : 1))
+      cy = screen.center_y(h + (decor.none? ? 0 : 1))
       super(screen, x: cx, y: cy, width: w, height: h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
       @screen.raise(self)
       @screen.focus(self)
@@ -67,7 +63,11 @@ module CRT
 
     def draw(canvas : Ansi::Canvas) : Nil
       p = panel(canvas).fill(style)
-      p = p.shadow if shadow
+      case decor
+      when .shadow? then p = p.shadow
+      when .bevel?  then p = p.bevel
+      else               # none
+      end
       p.draw
 
       # Title on border row

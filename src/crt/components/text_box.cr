@@ -16,14 +16,14 @@ module CRT
                    @scrollbar : Bool = false,
                    @thumb_style : Ansi::Style = Slider::THUMB_DEFAULT,
                    @track_style : Ansi::Style = Slider::TRACK_DEFAULT,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false)
+                   decor : Decor = Decor::None)
       @scroll_y = 0
       @scroll_x = 0
       @lines = [] of String
       super(screen, x: x, y: y, width: width, height: height,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, decor: decor, focusable: true)
       @lines = compute_lines
     end
 

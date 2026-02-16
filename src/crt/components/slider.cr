@@ -25,7 +25,7 @@ module CRT
                    @step : Float64 = 0.1,
                    @thumb_style : Ansi::Style = THUMB_DEFAULT,
                    @track_style : Ansi::Style = TRACK_DEFAULT,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    &on_change : Float64 ->)
       @on_change = on_change
       @value = @value.clamp(0.0, 1.0)
@@ -44,7 +44,7 @@ module CRT
                    @step : Float64 = 0.1,
                    @thumb_style : Ansi::Style = THUMB_DEFAULT,
                    @track_style : Ansi::Style = TRACK_DEFAULT,
-                   style : Ansi::Style = Ansi::Style.default)
+                   style : Ansi::Style = CRT.theme.base)
       @on_change = nil
       @value = @value.clamp(0.0, 1.0)
       @thumb_size = @thumb_size.clamp(0.0, 1.0)

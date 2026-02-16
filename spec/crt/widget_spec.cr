@@ -25,11 +25,11 @@ describe CRT::Widget do
       widget.focused?.should be_false
     end
 
-    it "defaults to no border and no shadow" do
+    it "defaults to no border and no decor" do
       screen = test_screen
       widget = TestWidget.new(screen, x: 0, y: 0, width: 10, height: 5)
       widget.border.should be_nil
-      widget.shadow.should be_false
+      widget.decor.none?.should be_true
     end
   end
 

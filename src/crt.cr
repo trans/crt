@@ -15,6 +15,18 @@ module CRT
     Column
     Row
   end
+
+  enum Decor
+    None
+    Shadow
+    Bevel
+  end
+
+  enum TabType
+    Folder
+    Underline
+  end
+
 end
 
 require "./crt/theme"

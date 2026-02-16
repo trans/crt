@@ -11,9 +11,9 @@ module CRT
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    box : Ansi::Boxing? = nil,
                    @direction : Direction = Direction::Column,
                    @gap : Int32 = 0,
@@ -24,7 +24,7 @@ module CRT
       @auto_width = width.nil?
       @auto_height = height.nil?
       super(screen, x: x, y: y, width: width || 0, height: height || 0,
-            style: style, border: border, shadow: shadow,
+            style: style, border: border, decor: decor,
             focusable: true, box: box)
     end
 

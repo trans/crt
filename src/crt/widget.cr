@@ -14,7 +14,7 @@ module CRT
     property height : Int32
     property style : Ansi::Style
     property border : Ansi::Border?
-    property shadow : Bool
+    property decor : Decor
     getter? visible : Bool
     getter? focusable : Bool
     getter? focused : Bool
@@ -23,13 +23,13 @@ module CRT
 
     def initialize(@screen : Screen, *, @x : Int32, @y : Int32,
                    @width : Int32, @height : Int32,
-                   @style : Ansi::Style = Ansi::Style.default,
+                   @style : Ansi::Style = CRT.theme.base,
                    @border : Ansi::Border? = nil,
-                   @shadow : Bool = false,
+                   @decor : Decor = Decor::None,
                    @visible : Bool = true,
                    @focusable : Bool = false,
                    @box : Ansi::Boxing? = nil,
-                   @theme : Theme = Theme.new)
+                   @theme : Theme = CRT.theme)
       @focused = false
       register_boxing
       @screen.register(self)
@@ -86,7 +86,11 @@ module CRT
       elsif b = border
         p = p.border(b, style)
       end
-      p = p.shadow if shadow
+      case decor
+      when .shadow? then p = p.shadow
+      when .bevel?  then p = p.bevel
+      else               # none
+      end
       p
     end
 

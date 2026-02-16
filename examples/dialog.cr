@@ -19,10 +19,8 @@ CRT::Screen.open(alt_screen: true, raw_mode: true, hide_cursor: true) do |screen
   end
 
   # Quit hint
-  hint_style = CRT::Style.new(dim: true)
   CRT::Label.new(screen, x: 2, y: 6,
-    text: "Tab to focus button | Enter to activate | Ctrl+C to quit",
-    style: hint_style)
+    text: "Tab to focus button | Enter to activate | Ctrl+C to quit")
 
   screen.run(fps: 30) do
     screen.each_event do |event|

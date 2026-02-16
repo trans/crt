@@ -2,26 +2,34 @@ module CRT
   class Tabs < Widget
     record Page, label : String, frame : Frame
 
-    THEME_DEFAULT = Theme.new(active: Ansi::Style::INVERSE)
+    def self.default_theme : Theme
+      CRT.theme.copy_with(
+        focused: Ansi::Style.new(bg: Ansi::Color.rgb(255, 255, 255)),
+        unfocused: Ansi::Style.default,
+        active: CRT.theme.field_style,
+        passive: Ansi::Style.default)
+    end
 
     @pages : Array(Page)
     @active : Int32
     @in_page : Bool
     @separator : Bool
+    property tab_type : TabType
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    width : Int32, height : Int32,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    box : Ansi::Boxing? = nil,
-                   @separator : Bool = true,
-                   theme : Theme = THEME_DEFAULT)
+                   @separator : Bool = false,
+                   @tab_type : TabType = TabType::Folder,
+                   theme : Theme = Tabs.default_theme)
       @pages = [] of Page
       @active = 0
       @in_page = false
       super(screen, x: x, y: y, width: width, height: height,
-            style: style, border: border, shadow: shadow,
+            style: style, border: border, decor: decor,
             focusable: true, box: box, theme: theme)
     end
 
@@ -70,6 +78,10 @@ module CRT
       p.fill(style).draw
       draw_tab_bar(canvas)
       draw_separator(canvas)
+      # Extend bevel to top-right for underline style
+      if @tab_type.underline? && decor.bevel?
+        canvas.put(x + width, y, "▎", Ansi::Style.new(fg: Ansi::Color.rgb(70, 70, 85)))
+      end
 
       if page = active_page
         page.draw(canvas)
@@ -115,32 +127,85 @@ module CRT
     # Layout helpers
 
     private def page_x : Int32
-      content_x
+      content_x + 2
     end
 
     private def page_y : Int32
-      content_y + 1 + (@separator ? 1 : 0)
+      content_y + 2 + (@separator ? 1 : 0)
     end
 
     private def page_width : Int32
-      content_width
+      content_width - 2
     end
 
     private def page_height : Int32
-      content_height - 1 - (@separator ? 1 : 0)
+      content_height - 2 - (@separator ? 1 : 0)
     end
 
     # Tab bar rendering
 
     private def draw_tab_bar(canvas : Ansi::Canvas) : Nil
-      cx = content_x + 1
+      case @tab_type
+      when .folder?
+        draw_tab_bar_folder(canvas)
+      when .underline?
+        draw_tab_bar_underline(canvas)
+      end
+    end
+
+    private def draw_tab_bar_folder(canvas : Ansi::Canvas) : Nil
+      cx = content_x
       @pages.each_with_index do |page, i|
+        if i > 0
+          canvas.put(cx, content_y, "│", Ansi::Style.new(fg: Ansi::Color.rgb(70, 70, 85), bg: style.bg))
+          cx += 1
+        end
         is_active = i == @active
-        s = theme.resolve(style, focused: focused?, active: is_active)
-        prefix = is_active ? "▸" : " "
-        text = "#{prefix}#{page.label} "
+        s = theme.resolve(style, focused: focused? && !@in_page && is_active, active: is_active)
+        text = " #{page.label} "
         canvas.write(cx, content_y, text, s)
         cx += Ansi::DisplayWidth.width(text)
+      end
+      # Clear remaining cells to default background
+      right_edge = content_x + content_width
+      while cx < right_edge
+        canvas.put(cx, content_y, " ", Ansi::Style.default)
+        cx += 1
+      end
+    end
+
+    private def draw_tab_bar_underline(canvas : Ansi::Canvas) : Nil
+      cx = content_x
+      label_ranges = [] of {Int32, Int32}
+      @pages.each_with_index do |page, i|
+        is_active = i == @active
+        label_w = Ansi::DisplayWidth.width(page.label)
+        text = " #{page.label} "
+        text_w = Ansi::DisplayWidth.width(text)
+        label_ranges << {cx + 1, cx + 1 + label_w}
+        s = is_active ? style.merge(Ansi::Style.new(bold: true)) : style
+        canvas.write(cx, content_y, text, s)
+        cx += text_w
+      end
+      # Clear remaining cells
+      right_edge = content_x + content_width
+      while cx < right_edge
+        canvas.put(cx, content_y, " ", style)
+        cx += 1
+      end
+      # Draw underline
+      line_y = content_y + 1
+      active_range = @active < label_ranges.size ? label_ranges[@active] : nil
+      dim_line = Ansi::Style.new(fg: Ansi::Color.rgb(100, 100, 120), bg: style.bg)
+      bright_line = if focused? && !@in_page
+                      Ansi::Style.new(fg: Ansi::Color.rgb(255, 255, 255), bg: style.bg)
+                    else
+                      Ansi::Style.new(fg: theme.base.fg, bg: style.bg)
+                    end
+      content_width.times do |i|
+        lx = content_x + i
+        in_active = active_range && lx >= active_range[0] && lx < active_range[1]
+        canvas.put(lx, line_y, "─", in_active ? bright_line : dim_line)
       end
     end
 

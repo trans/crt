@@ -1,6 +1,8 @@
 module CRT
   class Checkbox < Widget
-    THEME_DEFAULT = Theme.new(focused: Ansi::Style::INVERSE)
+    def self.default_theme : Theme
+      CRT.theme.copy_with(unfocused: Ansi::Style.default)
+    end
 
     @text : String
     @checked : Bool
@@ -13,18 +15,18 @@ module CRT
                    @text : String,
                    @checked : Bool = false,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @checked_mark : String = "⬛",
                    @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    @pad : Int32 = 0,
-                   theme : Theme = THEME_DEFAULT,
+                   theme : Theme = Checkbox.default_theme,
                    &on_change : Bool ->)
       @on_change = on_change
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
     end
 
@@ -32,17 +34,17 @@ module CRT
                    @text : String,
                    @checked : Bool = false,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @checked_mark : String = "⬛",
                    @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    @pad : Int32 = 0,
-                   theme : Theme = THEME_DEFAULT)
+                   theme : Theme = Checkbox.default_theme)
       @on_change = nil
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
     end
 
@@ -83,7 +85,11 @@ module CRT
       if b = border
         p = p.border(b, style)
       end
-      p = p.shadow if shadow
+      case decor
+      when .shadow? then p = p.shadow
+      when .bevel?  then p = p.bevel
+      else               # none
+      end
       p.fill(style).draw
 
       mark = checked? ? @checked_mark : @unchecked_mark

@@ -9,17 +9,17 @@ module CRT
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    width : Int32,
                    @value : Float64 = 0.0,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.base,
                    @fill_char : String = "█",
                    @empty_char : String = "░",
                    @fill_style : Ansi::Style? = nil,
                    @empty_style : Ansi::Style? = nil,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false)
+                   decor : Decor = Decor::None)
       @value = @value.clamp(0.0, 1.0)
       h = 1 + (border ? 2 : 0)
       super(screen, x: x, y: y, width: width, height: h,
-            style: style, border: border, shadow: shadow, focusable: false)
+            style: style, border: border, decor: decor, focusable: false)
     end
 
     getter value : Float64

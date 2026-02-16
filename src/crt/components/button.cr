@@ -1,41 +1,43 @@
 module CRT
   class Button < Widget
-    THEME_DEFAULT = Theme.new(
-      focused: Ansi::Style::INVERSE,
-      unfocused: Ansi::Style.new(dim: true, inverse: true))
-
     @text : String
     @pad : Int32
     @action : (-> Nil)?
 
+    def self.default_theme : Theme
+      CRT.theme.copy_with(
+        focused: Ansi::Style.new(bg: Ansi::Color.rgb(255, 255, 255)),
+        unfocused: Ansi::Style.default)
+    end
+
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    @text : String,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.field_style,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    @pad : Int32 = 2,
-                   theme : Theme = THEME_DEFAULT,
+                   theme : Theme = Button.default_theme,
                    &action : -> Nil)
       @action = action
       w, h = compute_size(@text, border, @pad)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    @text : String,
                    width : Int32? = nil, height : Int32? = nil,
-                   style : Ansi::Style = Ansi::Style.default,
+                   style : Ansi::Style = CRT.theme.field_style,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false,
+                   decor : Decor = Decor::None,
                    @pad : Int32 = 2,
-                   theme : Theme = THEME_DEFAULT)
+                   theme : Theme = Button.default_theme)
       @action = nil
       w, h = compute_size(@text, border, @pad)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true,
+            style: style, border: border, decor: decor, focusable: true,
             theme: theme)
     end
 
@@ -54,7 +56,11 @@ module CRT
       if b = border
         p = p.border(b, active)
       end
-      p = p.shadow if shadow
+      case decor
+      when .shadow? then p = p.shadow
+      when .bevel?  then p = p.bevel
+      else               # none
+      end
       p.fill(active)
        .text(@text, style: active, align: Ansi::Align::Center, valign: Ansi::VAlign::Middle, pad: @pad)
        .draw
