@@ -14,6 +14,9 @@ module CRT
   #
   #   ui[:name].as(CRT::Entry).text  # => ""
   #
+  # TODO: Explore macro-based DSL that could generate typed accessors
+  # (e.g. `ui.name : Entry`) to avoid `.as()` casts on lookup.
+  #
   # Widgets inside a container (page, frame) get added to that container
   # automatically — no explicit x/y needed. Top-level widgets need
   # coordinates.
