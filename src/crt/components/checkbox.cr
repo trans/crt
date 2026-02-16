@@ -1,10 +1,11 @@
 module CRT
   class Checkbox < Widget
+    THEME_DEFAULT = Theme.new(focused: Ansi::Style::INVERSE)
+
     @text : String
     @checked : Bool
     @checked_mark : String
     @unchecked_mark : String
-    @focus_style : Ansi::Style
     @pad : Int32
     @on_change : (Bool -> Nil)?
 
@@ -13,17 +14,18 @@ module CRT
                    @checked : Bool = false,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    @checked_mark : String = "⬛",
                    @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
                    @pad : Int32 = 0,
+                   theme : Theme = THEME_DEFAULT,
                    &on_change : Bool ->)
       @on_change = on_change
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -31,16 +33,17 @@ module CRT
                    @checked : Bool = false,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    @checked_mark : String = "⬛",
                    @unchecked_mark : String = "⬜",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
-                   @pad : Int32 = 0)
+                   @pad : Int32 = 0,
+                   theme : Theme = THEME_DEFAULT)
       @on_change = nil
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
     end
 
     def text : String
@@ -75,7 +78,7 @@ module CRT
     end
 
     def draw(canvas : Ansi::Canvas) : Nil
-      active = focused? ? style.merge(@focus_style) : style
+      resolved = theme.resolve(style, focused: focused?)
       p = canvas.panel(x, y, w: width, h: height)
       if b = border
         p = p.border(b, style)
@@ -87,7 +90,7 @@ module CRT
       mark_w = {Ansi::DisplayWidth.width(@checked_mark),
                 Ansi::DisplayWidth.width(@unchecked_mark)}.max
       canvas.write(content_x + @pad, content_y, mark, style)
-      canvas.write(content_x + @pad + mark_w + 1, content_y, @text, active)
+      canvas.write(content_x + @pad + mark_w + 1, content_y, @text, resolved)
     end
 
     def handle_event(event : Ansi::Event) : Bool

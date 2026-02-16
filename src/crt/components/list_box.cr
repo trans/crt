@@ -1,11 +1,12 @@
 module CRT
   class ListBox < Widget
+    THEME_DEFAULT = Theme.new(focused: Ansi::Style::INVERSE)
+
     @items : Array(String)
     @selected : Int32
     @scroll_y : Int32
     @marker : String
     @marker_w : Int32
-    @focus_style : Ansi::Style
     @on_change : (Int32 -> Nil)?
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -13,10 +14,10 @@ module CRT
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    @marker : String = "▸",
                    border : Ansi::Border? = Ansi::Border::Single,
                    shadow : Bool = false,
+                   theme : Theme = THEME_DEFAULT,
                    &on_change : Int32 ->)
       @on_change = on_change
       @scroll_y = 0
@@ -24,7 +25,8 @@ module CRT
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
       ensure_visible
     end
 
@@ -33,17 +35,18 @@ module CRT
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    @marker : String = "▸",
                    border : Ansi::Border? = Ansi::Border::Single,
-                   shadow : Bool = false)
+                   shadow : Bool = false,
+                   theme : Theme = THEME_DEFAULT)
       @on_change = nil
       @scroll_y = 0
       @marker_w = Ansi::DisplayWidth.width(@marker)
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
       ensure_visible
     end
 
@@ -77,9 +80,10 @@ module CRT
       visible.times do |row|
         i = @scroll_y + row
         break if i >= @items.size
-        prefix = i == @selected ? @marker : " " * @marker_w
+        is_selected = i == @selected
+        prefix = is_selected ? @marker : " " * @marker_w
         display = "#{prefix} #{@items[i]}"
-        s = (i == @selected && focused?) ? style.merge(@focus_style) : style
+        s = theme.resolve(style, focused: is_selected && focused?, active: is_selected)
         canvas.write(content_x, content_y + row, display, s)
       end
     end

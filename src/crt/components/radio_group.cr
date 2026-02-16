@@ -1,10 +1,11 @@
 module CRT
   class RadioGroup < Widget
+    THEME_DEFAULT = Theme.new(focused: Ansi::Style::INVERSE)
+
     @items : Array(String)
     @selected : Int32
     @selected_mark : String
     @unselected_mark : String
-    @focus_style : Ansi::Style
     @on_change : (Int32 -> Nil)?
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -12,17 +13,18 @@ module CRT
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    @selected_mark : String = "⬤",
                    @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
+                   theme : Theme = THEME_DEFAULT,
                    &on_change : Int32 ->)
       @on_change = on_change
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -30,16 +32,17 @@ module CRT
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    @selected_mark : String = "⬤",
                    @unselected_mark : String = "◯",
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false)
+                   shadow : Bool = false,
+                   theme : Theme = THEME_DEFAULT)
       @on_change = nil
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
     end
 
     getter items : Array(String)
@@ -73,9 +76,10 @@ module CRT
       mark_w = {Ansi::DisplayWidth.width(@selected_mark),
                 Ansi::DisplayWidth.width(@unselected_mark)}.max
       @items.each_with_index do |item, i|
-        mark = i == @selected ? @selected_mark : @unselected_mark
+        is_selected = i == @selected
+        mark = is_selected ? @selected_mark : @unselected_mark
         canvas.write(content_x, content_y + i, mark, style)
-        s = (i == @selected && focused?) ? style.merge(@focus_style) : style
+        s = theme.resolve(style, focused: is_selected && focused?, active: is_selected)
         canvas.write(content_x + mark_w + 1, content_y + i, item, s)
       end
     end

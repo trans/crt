@@ -17,6 +17,7 @@ module CRT
   end
 end
 
+require "./crt/theme"
 require "./crt/widget"
 require "./crt/screen"
 require "./crt/components/label"
@@ -32,3 +33,4 @@ require "./crt/components/entry_box"
 require "./crt/components/dialog"
 require "./crt/components/item_list"
 require "./crt/components/frame"
+require "./crt/components/tabs"

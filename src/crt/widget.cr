@@ -19,6 +19,7 @@ module CRT
     getter? focusable : Bool
     getter? focused : Bool
     getter box : Ansi::Boxing?
+    getter theme : Theme
 
     def initialize(@screen : Screen, *, @x : Int32, @y : Int32,
                    @width : Int32, @height : Int32,
@@ -27,7 +28,8 @@ module CRT
                    @shadow : Bool = false,
                    @visible : Bool = true,
                    @focusable : Bool = false,
-                   @box : Ansi::Boxing? = nil)
+                   @box : Ansi::Boxing? = nil,
+                   @theme : Theme = Theme.new)
       @focused = false
       register_boxing
       @screen.register(self)

@@ -1,11 +1,11 @@
 module CRT
   class ItemList < Widget
-    UNFOCUSED_DEFAULT = Ansi::Style.new(dim: true, inverse: true)
+    THEME_DEFAULT = Theme.new(
+      focused: Ansi::Style::INVERSE,
+      unfocused: Ansi::Style.new(dim: true, inverse: true))
 
     @items : Array(String)
     @selected : Int32
-    @focus_style : Ansi::Style
-    @unfocus_style : Ansi::Style
     @left_mark : String
     @right_mark : String
     @pad : Int32
@@ -16,19 +16,19 @@ module CRT
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @unfocus_style : Ansi::Style = UNFOCUSED_DEFAULT,
                    @left_mark : String = "◄",
                    @right_mark : String = "►",
                    @pad : Int32 = 1,
                    border : Ansi::Border? = nil,
                    shadow : Bool = false,
+                   theme : Theme = THEME_DEFAULT,
                    &on_change : Int32 ->)
       @on_change = on_change
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
     end
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
@@ -36,18 +36,18 @@ module CRT
                    @selected : Int32 = 0,
                    width : Int32? = nil, height : Int32? = nil,
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
-                   @unfocus_style : Ansi::Style = UNFOCUSED_DEFAULT,
                    @left_mark : String = "◄",
                    @right_mark : String = "►",
                    @pad : Int32 = 1,
                    border : Ansi::Border? = nil,
-                   shadow : Bool = false)
+                   shadow : Bool = false,
+                   theme : Theme = THEME_DEFAULT)
       @on_change = nil
       @selected = @selected.clamp(0, @items.size - 1)
       w, h = compute_size(border)
       super(screen, x: x, y: y, width: width || w, height: height || h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
     end
 
     getter items : Array(String)
@@ -85,15 +85,15 @@ module CRT
       cy = content_y
       # Left mark
       canvas.write(content_x, cy, @left_mark, style)
-      # Item text — pad + centered item + pad, all in active style
+      # Item text — pad + centered item + pad, all in resolved style
       item = @items[@selected]
       item_w = Ansi::DisplayWidth.width(item)
       pad_total = item_area_w - item_w
       pad_left = {pad_total // 2, 0}.max
       pad_right = {pad_total - pad_left, 0}.max
       padded = " " * @pad + " " * pad_left + item + " " * pad_right + " " * @pad
-      active = focused? ? style.merge(@focus_style) : style.merge(@unfocus_style)
-      canvas.write(content_x + lm_w, cy, padded, active)
+      resolved = theme.resolve(style, focused: focused?)
+      canvas.write(content_x + lm_w, cy, padded, resolved)
       # Right mark
       canvas.write(content_x + content_width - rm_w, cy, @right_mark, style)
     end

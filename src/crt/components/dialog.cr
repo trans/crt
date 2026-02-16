@@ -7,11 +7,14 @@ module CRT
     BUTTON_PAD = 2
     BUTTON_GAP = 2
 
+    THEME_DEFAULT = Theme.new(
+      focused: Ansi::Style::INVERSE,
+      unfocused: Ansi::Style.new(dim: true, inverse: true))
+
     @title : String?
     @message_lines : Array(String)
     @buttons : Array(String)
     @selected : Int32
-    @focus_style : Ansi::Style
     @on_choice : (Int32 -> Nil)?
 
     def initialize(screen : Screen, *,
@@ -19,9 +22,9 @@ module CRT
                    message : String,
                    @buttons : Array(String) = ["OK"],
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    border : Ansi::Border = Ansi::Border::Rounded,
                    shadow : Bool = true,
+                   theme : Theme = THEME_DEFAULT,
                    &on_choice : Int32 ->)
       @on_choice = on_choice
       @selected = 0
@@ -30,7 +33,8 @@ module CRT
       cx = screen.center_x(w + (shadow ? 1 : 0))
       cy = screen.center_y(h + (shadow ? 1 : 0))
       super(screen, x: cx, y: cy, width: w, height: h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
       @screen.raise(self)
       @screen.focus(self)
       @screen.modal = self
@@ -41,9 +45,9 @@ module CRT
                    message : String,
                    @buttons : Array(String) = ["OK"],
                    style : Ansi::Style = Ansi::Style.default,
-                   @focus_style : Ansi::Style = Ansi::Style::INVERSE,
                    border : Ansi::Border = Ansi::Border::Rounded,
-                   shadow : Bool = true)
+                   shadow : Bool = true,
+                   theme : Theme = THEME_DEFAULT)
       @on_choice = nil
       @selected = 0
       @message_lines = message.split('\n')
@@ -51,7 +55,8 @@ module CRT
       cx = screen.center_x(w + (shadow ? 1 : 0))
       cy = screen.center_y(h + (shadow ? 1 : 0))
       super(screen, x: cx, y: cy, width: w, height: h,
-            style: style, border: border, shadow: shadow, focusable: true)
+            style: style, border: border, shadow: shadow, focusable: true,
+            theme: theme)
       @screen.raise(self)
       @screen.focus(self)
       @screen.modal = self
@@ -78,7 +83,7 @@ module CRT
         canvas.write(content_x + PAD, content_y + 1 + i, line, style)
       end
 
-      # Buttons centered on bottom row — styled like Button widget
+      # Buttons centered on bottom row
       button_y = content_y + content_height - 2
       total_w = buttons_row_width
       start_x = content_x + (content_width - total_w) // 2
@@ -87,7 +92,7 @@ module CRT
       @buttons.each_with_index do |label, i|
         btn_text = " " * BUTTON_PAD + label + " " * BUTTON_PAD
         btn_w = Ansi::DisplayWidth.width(btn_text)
-        btn_style = i == @selected ? style.merge(@focus_style) : style.merge(Button::UNFOCUSED_DEFAULT)
+        btn_style = theme.resolve(style, focused: i == @selected)
         canvas.write(bx, button_y, btn_text, btn_style)
         bx += btn_w + BUTTON_GAP
       end
