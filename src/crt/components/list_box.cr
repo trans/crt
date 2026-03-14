@@ -6,6 +6,7 @@ module CRT
     @marker : String
     @marker_w : Int32
     @on_change : (Int32 -> Nil)?
+    @on_activate : (Int32 -> Nil)?
 
     def initialize(screen : Screen, *, x : Int32, y : Int32,
                    @items : Array(String),
@@ -17,6 +18,7 @@ module CRT
                    decor : Decor = Decor::None,
                    &on_change : Int32 ->)
       @on_change = on_change
+      @on_activate = nil
       @scroll_y = 0
       @marker_w = Ansi::DisplayWidth.width(@marker)
       @selected = @selected.clamp(0, @items.size - 1)
@@ -35,6 +37,7 @@ module CRT
                    border : Ansi::Border? = Ansi::Border::Single,
                    decor : Decor = Decor::None)
       @on_change = nil
+      @on_activate = nil
       @scroll_y = 0
       @marker_w = Ansi::DisplayWidth.width(@marker)
       @selected = @selected.clamp(0, @items.size - 1)
@@ -58,6 +61,7 @@ module CRT
     end
 
     property on_change : (Int32 -> Nil)?
+    property on_activate : (Int32 -> Nil)?
 
     def select(index : Int32) : Nil
       index = index.clamp(0, @items.size - 1)
@@ -104,7 +108,7 @@ module CRT
           self.select(@items.size - 1)
           return true
         elsif event.code.enter? || (event.code.char? && event.char == " ")
-          @on_change.try(&.call(@selected))
+          @on_activate.try(&.call(@selected))
           return true
         end
       when Ansi::Mouse

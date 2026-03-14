@@ -2,7 +2,7 @@ require "./spec_helper"
 
 describe CRT do
   it "has a version" do
-    CRT::VERSION.should eq("0.1.0")
+    CRT::VERSION.should eq("0.2.0")
   end
 
   it "aliases Style from Ansi" do

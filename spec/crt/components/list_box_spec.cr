@@ -234,12 +234,11 @@ describe CRT::ListBox do
   end
 
   describe "#handle_event" do
-    it "Space fires callback" do
+    it "Space fires on_activate callback" do
       screen = test_screen
       received = nil
-      lb = CRT::ListBox.new(screen, x: 0, y: 0, items: ["A", "B"]) { |i|
-        received = i
-      }
+      lb = CRT::ListBox.new(screen, x: 0, y: 0, items: ["A", "B"])
+      lb.on_activate = ->(i : Int32) { received = i; nil }
       lb.handle_event(CRT::Ansi::Key.char(' ')).should be_true
       received.should eq(0)
     end
